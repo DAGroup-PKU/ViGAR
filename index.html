@@ -67,7 +67,7 @@
           <div class="is-size-5 publication-authors">
             <span class="author-block"><sup>1</sup>Peking University</span>
             <span class="author-block"><sup>2</sup>AgiBot</span>
-            <span class="author-block"><sup>3</sup>Coco Matrix</span>
+            <span class="author-block"><sup>3</sup>CocoMatrix</span>
             <span class="author-block"><sup>4</sup>Fudan University</span>
             <span class="eql-cntrb"><small><br><sup>*</sup>Equal Contribution &nbsp;&nbsp; <sup>&dagger;</sup>Corresponding Author</small></span>
           </div>
@@ -136,9 +136,7 @@
 <!-- ============ Leaderboard ============ -->
 <section class="section performance-section" id="leaderboard-section">
   <div class="container is-max-desktop">
-    <div class="performance-header">
-      <h2 class="performance-title">Leaderboard</h2>
-    </div>
+    <h2 class="title is-3 performance-title has-text-centered">RoboTwin 2.0 Leaderboard</h2>
     <div class="lb-card">
       <div class="lb-head"><h3>Simulation &middot; RoboTwin Clean2Random</h3><span>average success rate (%) over the <em>Clean</em> and <em>Random</em> settings &middot; 50 tasks &times; 100 rollouts each</span></div>
       <div id="lb-sim"></div>
@@ -150,39 +148,17 @@
   </div>
 </section>
 
-<!-- ============ Why ViGAR ============ -->
-<section class="section features-section">
+<!-- ============ Real-robot demo videos ============ -->
+<section class="section case-gallery-section" id="demos-section">
   <div class="container is-max-desktop">
-    <div class="features-header">
-      <h2 class="features-title">Why ViGAR?</h2>
-      <p class="features-subtitle">Compositional manipulation = long-term future <em>selection</em> + short-term future <em>realization</em></p>
-    </div>
-    <div class="features-grid">
-      <div class="feature-card">
-        <h3 class="feature-title">A subgoal image is the decision variable</h3>
-        <p class="feature-description">
-          Instead of asking a world-action model only <em>&ldquo;what happens next?&rdquo;</em>, ViGAR first decides
-          <span class="feature-highlight">which intermediate state to pursue</span> and renders it as an image.
-          Pixels pin down the target configuration far more precisely than a language subtask does.
-        </p>
-      </div>
-      <div class="feature-card">
-        <h3 class="feature-title">One world model, two roles</h3>
-        <p class="feature-description">
-          The subgoal planner and the subgoal-guided policy are both initialized from the same pretrained
-          <span class="feature-highlight">Cosmos3-Nano</span> backbone, so planning and acting share
-          <span class="feature-highlight">common physical knowledge</span>. The subgoal enters the policy as a VAE latent, grounded at the pixel level.
-        </p>
-      </div>
-      <div class="feature-card">
-        <h3 class="feature-title">In-context manipulation</h3>
-        <p class="feature-description">
-          Keep the scene and instruction fixed and hand the planner a different
-          <span class="feature-highlight">global goal image</span>: it induces a new subtask decomposition and a
-          reorganized action sequence, so unseen task compositions are executed <span class="feature-highlight">without any parameter update</span>.
-        </p>
-      </div>
-    </div>
+    <h2 class="title is-3 performance-title has-text-centered">Real-robot Demos</h2>
+
+    <h3 class="subhead first">Compositional manipulation</h3>
+    <div id="task-demos"></div>
+
+    <h3 class="subhead">In-context manipulation from a global goal image</h3>
+    <p class="demo-lead">Same scene and instruction, different global goal. Each tile shows the goal handed to the planner (blue: head camera on top, wrist cameras below) next to the resulting rollout (red).</p>
+    <div id="icl-demos"></div>
   </div>
 </section>
 
@@ -270,7 +246,6 @@
       Experiments run on an <b>AgiBot A2</b> with two 7-DoF arms, two wrist cameras and one front-facing camera. ViGAR is mid-trained on
       &sim;900 hours of teleoperation data from the same embodiment (752 tasks, 200+ objects, 10+ backgrounds), then post-trained on task-specific
       demonstrations. Five long-horizon tasks are evaluated over 20 rollouts each and scored by <b>task progress</b> (fraction of sequential stages completed).
-      All clips below are uncut, autonomous rollouts from the front camera.
     </p>
 
     <section class="chart-section" aria-label="Real-robot task progress">
@@ -279,8 +254,6 @@
         <div class="gbar-grid" id="rr-chart"></div>
       </div>
     </section>
-
-    <div id="task-demos"></div>
 
     <h3 class="subhead">Stage-wise success</h3>
     <div class="paper-table-wrap">
@@ -301,7 +274,6 @@
       With the initial scene and the language instruction held fixed, only a <b>global goal image</b> <i>G</i> is handed to the subgoal planner.
       Training demonstrations cover a restricted set of placement patterns; at test time an unseen goal specifies a task composition that was never
       demonstrated, and the planner decomposes it into subgoals that the unchanged policy executes.
-      Each tile shows the global goal (blue: head camera on top, wrist cameras below) next to the resulting rollout (red).
     </p>
 
     <section class="chart-section" aria-label="In-context task progress">
@@ -311,8 +283,6 @@
         <p class="table-caption">Task progress over 20 rollouts each. OOD averages combine two unseen goal configurations with different numbers of stages.</p>
       </div>
     </section>
-
-    <div id="icl-demos"></div>
 
     <h3 class="subhead">Stage-wise success on in-context tasks</h3>
     <div class="paper-table-wrap">
@@ -471,10 +441,10 @@ const TASKS = [
       ['tidy_up_desktop_blue_bg_bin_left_cup_paper_lowquality', 'Cup + crumpled paper', 134.8]] },
   { id: 'cups', name: 'Pile Paper Cups', stages: 3, instr: 'Build a single nested stack from the paper cups.', half: true,
     scores: { pi: 0.82, cosmos: 0.65, ours: 0.85 }, sr: { pi: [0.95, 0.85, 0.65], cosmos: [0.85, 0.65, 0.45], ours: [0.90, 0.85, 0.80] },
-    clips: [['pile_paper_cups_blue_bg', 'Blue mat', 110.1]] },
+    clips: [['pile_paper_cups_rife60', 'Blue mat', 110.1]] },
   { id: 'buns', name: 'Take-out Steam Buns', stages: 5, instr: 'Extract the buns from the bamboo steamer and set them down on a plate.', half: true,
     scores: { pi: 0.27, cosmos: 0.19, ours: 0.42 }, sr: { pi: [0.60, 0.35, 0.25, 0.15, 0.00], cosmos: [0.50, 0.25, 0.15, 0.05, 0.00], ours: [0.65, 0.55, 0.45, 0.30, 0.15] },
-    clips: [['take_out_steam_buns_blue_bg_black_plate', 'Blue mat · black plate', 260.0]] },
+    clips: [['take_out_steam_buns_blue_bg_black_plate_8x', 'Blue mat · black plate', 260.0]] },
 ];
 const ICL = [
   { name: 'Fruit Arrangement', instr: 'Place fruits into the basket. Act according to the subgoal image.', idn: 0.72, ood: 0.43,
@@ -507,13 +477,13 @@ document.getElementById('rr-chart').innerHTML = rr;
 document.getElementById('icl-chart').innerHTML = ICL.map(t => `<div class="gbar"><p class="tp-head">${t.name}</p>${bar('In-domain', t.idn, 'base', 1)}${bar('OOD', t.ood, 'ours', 1)}</div>`).join('');
 
 // ---------- demo tiles ----------
-const tile = (name, label, dur) => `<figure class="demo-tile"><div class="vwrap"><video muted playsinline loop autoplay controls preload="metadata" poster="${V}${name}.jpg" data-src="${V}${name}.mp4"></video><span class="badge">4&times;</span></div><figcaption><span>${label}</span></figcaption></figure>`;
+const tile = (name, label, dur, speed = '4&times;') => `<figure class="demo-tile"><div class="vwrap"><video muted playsinline loop autoplay controls preload="metadata" poster="${V}${name}.jpg" data-src="${V}${name}.mp4"></video><span class="badge">${speed}</span></div><figcaption><span>${label}</span></figcaption></figure>`;
 let td = '', inPair = false;
 for (const t of TASKS) {
   if (t.half && !inPair) { td += '<div class="task-pair">'; inPair = true; }
   if (!t.half && inPair) { td += '</div>'; inPair = false; }
   td += `<div class="task-block${t.half ? ' half' : ''}" id="task-${t.id}"><div class="task-head"><h3>${t.name}</h3><span class="pill">${t.stages} subtasks</span><span class="score">task progress <b>${t.scores.ours.toFixed(2)}</b> <span style="color:#94a3b8">vs ${t.scores.pi.toFixed(2)} / ${t.scores.cosmos.toFixed(2)}</span></span></div>
-    <p class="task-instr">&ldquo;${t.instr}&rdquo;</p><div class="demo-grid ${t.clips.length === 4 ? 'cols4' : t.clips.length === 2 ? 'cols2' : 'cols1'}">${t.clips.map(c => tile(c[0], c[1], c[2])).join('')}</div></div>`;
+    <p class="task-instr">&ldquo;${t.instr}&rdquo;</p><div class="demo-grid ${t.clips.length === 4 ? 'cols4' : t.clips.length === 2 ? 'cols2' : 'cols1'}">${t.clips.map(c => tile(c[0], c[1], c[2], c[3])).join('')}</div></div>`;
 }
 if (inPair) td += '</div>';
 document.getElementById('task-demos').innerHTML = td;

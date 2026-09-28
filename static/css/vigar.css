@@ -199,3 +199,8 @@
 @media screen and (max-width: 760px) { .task-pair { grid-template-columns: minmax(0, 1fr); } }
 
 .hf-icon { font-style: normal; font-size: 1.05em; line-height: 1; }
+
+/* demo section intro lines */
+.demo-lead { text-align: center; color: var(--text-secondary); font-size: 0.95rem; margin: 0.2rem auto 0.4rem; max-width: 820px; }
+#demos-section #task-demos > .task-block:first-child { margin-top: 1rem; }
+#demos-section #icl-demos > .task-block:first-child { margin-top: 1rem; }
