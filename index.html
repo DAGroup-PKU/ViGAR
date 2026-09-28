@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ViGAR: Rethinking World-Action Model for Compositional and In-Context Robotic Manipulation</title>
+  <meta name="description" content="ViGAR (Visual Goal-conditioned Action Reasoning) factorizes long-horizon manipulation into a visual subgoal planner and a subgoal-guided world-action policy, both built on one pretrained world model. It reaches 82.00% / 67.02% on RoboTwin Clean / Random and supports in-context task specification from a single global goal image.">
+  <meta name="keywords" content="World-Action Model, Robotic Manipulation, Visual Subgoal, In-Context Learning, Cosmos, RoboTwin, AgiBot">
+  <meta name="author" content="Shukai Gong, Xuanran Zhai, Yintianrun Zhang, Ruopeng Cui, Ye Huang, Yiyang Fu, Dexuan Lyu, Chaojie Li, Xinyi Song, Peiwen Lin, Chuang Wang, Mingyuan Jia, Yufan Deng, Jiaxin Fang, Yuxiang Gao, Jiaxin Li, Bo Liang, Hao Liu, Daquan Zhou">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="ViGAR: Rethinking World-Action Model for Compositional and In-Context Robotic Manipulation">
+  <meta property="og:image" content="static/images/teaser.jpg">
+  <meta name="theme-color" content="#2563eb">
+
+  <link rel="icon" type="image/x-icon" href="static/images/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+  <link rel="stylesheet" href="static/css/vigar.css">
+
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+</head>
+<body>
+
+<button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
+  <i class="fas fa-chevron-up"></i>
+</button>
+
+<main id="main-content">
+
+<!-- ============ Hero ============ -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title"><span class="title-grad">Rethinking World-Action Model for<br>Compositional and In-Context Robotic Manipulation</span></h1>
+          <p class="hero-tagline"><span class="gradient-text tagline-name">ViGAR</span> &mdash; Visual Goal-conditioned Action Reasoning</p>
+
+          <div class="is-size-5 publication-authors" style="margin-top:1.2rem">
+            <span class="author-block"><a href="#">Shukai Gong</a><sup>1*</sup>,</span>
+            <span class="author-block"><a href="#">Xuanran Zhai</a><sup>2*</sup>,</span>
+            <span class="author-block"><a href="#">Yintianrun Zhang</a><sup>1*</sup>,</span>
+            <span class="author-block"><a href="#">Ruopeng Cui</a><sup>2</sup>,</span>
+            <span class="author-block"><a href="https://yeyeah.life/">Ye Huang</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="#">Yiyang Fu</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="#">Dexuan Lyu</a><sup>2</sup>,</span>
+            <span class="author-block"><a href="#">Chaojie Li</a><sup>2</sup>,</span>
+            <span class="author-block"><a href="#">Xinyi Song</a><sup>2</sup>,</span>
+            <span class="author-block"><a href="#">Peiwen Lin</a><sup>2</sup>,</span><br>
+            <span class="author-block"><a href="#">Chuang Wang</a><sup>2</sup>,</span>
+            <span class="author-block"><a href="#">Mingyuan Jia</a><sup>3</sup>,</span>
+            <span class="author-block"><a href="#">Yufan Deng</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="#">Jiaxin Fang</a><sup>4</sup>,</span>
+            <span class="author-block"><a href="#">Yuxiang Gao</a><sup>3</sup>,</span>
+            <span class="author-block"><a href="#">Jiaxin Li</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="#">Bo Liang</a><sup>1</sup>,</span>
+            <span class="author-block"><a href="#">Hao Liu</a><sup>2&dagger;</sup>,</span>
+            <span class="author-block"><a href="https://zhoudaquan.github.io/homepage.io/">Daquan Zhou</a><sup>1&dagger;</sup></span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>Peking University</span>
+            <span class="author-block"><sup>2</sup>AgiBot</span>
+            <span class="author-block"><sup>3</sup>Coco Matrix</span>
+            <span class="author-block"><sup>4</sup>Fudan University</span>
+            <span class="eql-cntrb"><small><br><sup>*</sup>Equal Contribution &nbsp;&nbsp; <sup>&dagger;</sup>Corresponding Author</small></span>
+          </div>
+          <div class="affil-logos">
+            <img src="static/images/pku.png" alt="Peking University">
+            <img src="static/images/agibot.png" alt="AgiBot">
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block">
+                <a href="#" aria-disabled="true" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper (coming soon)</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://github.com/DAGroup-PKU/ViGAR" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fab fa-github"></i></span><span>Code</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://huggingface.co/DAGroup-PKU" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><span class="hf-icon" aria-hidden="true">🤗</span></span><span>Hugging Face</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#BibTeX" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-quote-right"></i></span><span>BibTeX</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Promo video ============ -->
+<section class="section pipeline-section" id="video-section" style="padding-top:0">
+  <div class="container is-max-desktop">
+    <div class="promo-wrap">
+      <video id="promo" controls playsinline preload="metadata" poster="static/videos/vigar_promo_poster.jpg">
+        <source src="static/videos/vigar_promo.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    <p class="promo-note">Overview video</p>
+  </div>
+</section>
+
+<!-- ============ Teaser ============ -->
+<section class="section pipeline-section" style="padding-top:0.5rem">
+  <div class="container is-max-desktop">
+    <div class="pipeline-card">
+      <img src="static/images/teaser.jpg" alt="ViGAR overview: a subgoal planner predicts the next subgoal image from the observation and instruction (optionally a global goal), and a world-action policy generates the video and action chunk that reach it." class="pipeline-image" loading="eager">
+      <p class="pipeline-caption teaser-caption">
+        <b>Overview of ViGAR.</b> Long-horizon compositional manipulation is factorized into <b>visual subgoal planning</b> and <b>subgoal execution</b>,
+        with both modules trained on task-diverse, long-horizon robot data. ViGAR performs strongly in simulation and on a real AgiBot A2,
+        and generalizes to unseen task compositions through <b>in-context steering</b> with a global goal image.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Leaderboard ============ -->
+<section class="section performance-section" id="leaderboard-section">
+  <div class="container is-max-desktop">
+    <div class="performance-header">
+      <h2 class="performance-title">Leaderboard</h2>
+    </div>
+    <div class="lb-card">
+      <div class="lb-head"><h3>Simulation &middot; RoboTwin Clean2Random</h3><span>average success rate (%) over the <em>Clean</em> and <em>Random</em> settings &middot; 50 tasks &times; 100 rollouts each</span></div>
+      <div id="lb-sim"></div>
+    </div>
+    <div class="lb-card">
+      <div class="lb-head"><h3>Real robot &middot; AgiBot A2</h3><span>average task progress over 5 long-horizon tasks &times; 20 rollouts</span></div>
+      <div id="lb-real"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Why ViGAR ============ -->
+<section class="section features-section">
+  <div class="container is-max-desktop">
+    <div class="features-header">
+      <h2 class="features-title">Why ViGAR?</h2>
+      <p class="features-subtitle">Compositional manipulation = long-term future <em>selection</em> + short-term future <em>realization</em></p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <h3 class="feature-title">A subgoal image is the decision variable</h3>
+        <p class="feature-description">
+          Instead of asking a world-action model only <em>&ldquo;what happens next?&rdquo;</em>, ViGAR first decides
+          <span class="feature-highlight">which intermediate state to pursue</span> and renders it as an image.
+          Pixels pin down the target configuration far more precisely than a language subtask does.
+        </p>
+      </div>
+      <div class="feature-card">
+        <h3 class="feature-title">One world model, two roles</h3>
+        <p class="feature-description">
+          The subgoal planner and the subgoal-guided policy are both initialized from the same pretrained
+          <span class="feature-highlight">Cosmos3-Nano</span> backbone, so planning and acting share
+          <span class="feature-highlight">common physical knowledge</span>. The subgoal enters the policy as a VAE latent, grounded at the pixel level.
+        </p>
+      </div>
+      <div class="feature-card">
+        <h3 class="feature-title">In-context manipulation</h3>
+        <p class="feature-description">
+          Keep the scene and instruction fixed and hand the planner a different
+          <span class="feature-highlight">global goal image</span>: it induces a new subtask decomposition and a
+          reorganized action sequence, so unseen task compositions are executed <span class="feature-highlight">without any parameter update</span>.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Abstract + Architecture ============ -->
+<section class="section hero is-light" id="method-section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column">
+        <h2 class="title is-3">About ViGAR</h2>
+        <div class="pipeline-card">
+          <img src="static/images/model_arch.png" alt="ViGAR architecture: the subgoal planner generates the next subgoal image from the instruction and current observation (optionally a global goal image); the policy takes the predicted subgoal and jointly predicts future frames and an action chunk." class="pipeline-image" loading="lazy">
+          <p class="pipeline-caption">
+            <b>Model architecture.</b> (1) The subgoal planner <i>G<sub>&theta;</sub></i> generates the next subgoal image from the task instruction and current observation,
+            optionally conditioned on a global goal image for in-context learning. (2) The policy <i>&pi;<sup>WAM</sup><sub>&phi;</sub></i> takes the predicted subgoal
+            and jointly predicts the future frames and the action chunk. Both share the Cosmos3-Nano reasoner&ndash;generator backbone.
+          </p>
+        </div>
+        <div class="content has-text-justified" style="margin-top:1.6rem">
+          <p>
+            Long-horizon compositional manipulation has become increasingly important for real-world robot deployment, where a single task involves
+            multiple coordinated subtasks. Existing world-action models (WAMs) jointly predict short-horizon visual futures and actions, but typically
+            lack explicit subtask-level reasoning. We propose <b>Visual Goal-conditioned Action Reasoning (ViGAR)</b>, a hierarchical framework that
+            factorizes manipulation into a visual subgoal planner and a subgoal executor. Given the current observation and global instruction, the
+            subgoal planner predicts a visual subgoal for the next subtask. The subgoal executor then jointly generates future visual trajectories and
+            actions conditioned on the predicted subgoal. Both components share a pretrained world-model representation, enabling task-level planning
+            and action generation to benefit from common physical knowledge.
+          </p>
+          <p>
+            Moreover, our framework naturally supports in-context learning: using a global goal image as context can induce different subtask
+            decompositions and behaviors without parameter updates. On the RoboTwin Clean2Random benchmark, ViGAR achieves
+            <span class="metric-highlight">82.00%</span> and <span class="metric-highlight">67.02%</span> success rates under the <em>Clean</em> and
+            <em>Random</em> settings, surpassing the strongest baseline by <span class="metric-highlight">12.81%</span> in average success rate.
+            Real-world robot experiments on five compositional and two in-context learning tasks further confirm the effectiveness of ViGAR.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Subgoal supervision design ============ -->
+<section class="section case-gallery-section" id="design-section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 performance-title has-text-centered">Making subgoal supervision consistent</h2>
+    <p class="section-lead">
+      Two implementation choices matter for training the planner. Frames at the end of subtask <i>i</i> look almost identical to frames at the start of
+      subtask <i>i+1</i>, yet the naive labels send them to different targets, so a planner tends to <b>regress</b> to a subtask that is already done.
+      And most pixels in a subgoal are static background, so a plain reconstruction loss under-weights the region where manipulation actually happens.
+    </p>
+    <div class="two-col eq">
+      <div class="pipeline-card">
+        <img src="static/images/subgoal_lookahead.png" alt="Subgoal look-ahead rule: the last p% of subtask i is redirected to target subgoal i+1" class="pipeline-image" loading="lazy">
+        <p class="pipeline-caption"><b>Subgoal look-ahead rule.</b> Observations in the last <i>p</i>% of subtask <i>T<sub>i</sub></i> are re-targeted to
+          <i>g<sub>i+1</sub></i>, so visually similar inputs across the boundary receive consistent supervision.</p>
+      </div>
+      <div class="pipeline-card">
+        <img src="static/images/subgoal_roi.jpg" alt="End-effector ROI weighting: the planning loss is weighted toward windows around the projected end-effectors" class="pipeline-image" loading="lazy">
+        <p class="pipeline-caption"><b>End-effector ROI weighting.</b> Expert end-effector positions are projected through the calibrated cameras; the
+          flow-matching loss is re-weighted 4:1 toward the union of windows around them.</p>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top:1.5rem">
+      <div class="lb-card" style="margin-top:0">
+        <div class="lb-head"><h3>Ablation: subgoal supervision</h3><span>RoboTwin avg. success (%)</span></div>
+        <div id="ab-sup"></div>
+        <p class="table-caption" style="margin-top:.7rem">Removing either component hurts; removing both costs 12 points.</p>
+      </div>
+      <div class="lb-card" style="margin-top:0">
+        <div class="lb-head"><h3>Ablation: goal injection route</h3><span>RoboTwin avg. success (%), ground-truth goals, 30k steps</span></div>
+        <div id="ab-route"></div>
+        <p class="table-caption" style="margin-top:.7rem">Feeding the goal to the generator as a VAE latent (the geometric route) is what makes randomized scenes work.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ Real-robot demos ============ -->
+<section class="section case-gallery-section" id="realrobot-section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 performance-title has-text-centered">Real-robot compositional manipulation</h2>
+    <p class="section-lead">
+      Experiments run on an <b>AgiBot A2</b> with two 7-DoF arms, two wrist cameras and one front-facing camera. ViGAR is mid-trained on
+      &sim;900 hours of teleoperation data from the same embodiment (752 tasks, 200+ objects, 10+ backgrounds), then post-trained on task-specific
+      demonstrations. Five long-horizon tasks are evaluated over 20 rollouts each and scored by <b>task progress</b> (fraction of sequential stages completed).
+      All clips below are uncut, autonomous rollouts from the front camera.
+    </p>
+
+    <section class="chart-section" aria-label="Real-robot task progress">
+      <div class="chart-card">
+        <div class="legend"><span class="l-ours">ViGAR</span><span class="l-base">&pi;<sub>0.5</sub></span><span class="l-base2">Cosmos3-Nano-Policy (same data &amp; recipe, no subgoal)</span></div>
+        <div class="gbar-grid" id="rr-chart"></div>
+      </div>
+    </section>
+
+    <div id="task-demos"></div>
+
+    <h3 class="subhead">Stage-wise success</h3>
+    <div class="paper-table-wrap">
+      <table class="paper-table" id="stage-table">
+        <thead><tr><th>Task</th><th>Stage</th><th>&pi;<sub>0.5</sub></th><th>Cosmos3-Nano-Policy</th><th>ViGAR</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="table-caption">Stage <i>k</i> can only be attempted after stages 1&hellip;<i>k</i>&minus;1 succeed, so success is non-increasing and the last stage equals full-task success. 20 rollouts per task.</p>
+  </div>
+</section>
+
+<!-- ============ In-context learning ============ -->
+<section class="section hero is-light" id="icl-section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 performance-title has-text-centered">In-context manipulation from a global goal image</h2>
+    <p class="section-lead">
+      With the initial scene and the language instruction held fixed, only a <b>global goal image</b> <i>G</i> is handed to the subgoal planner.
+      Training demonstrations cover a restricted set of placement patterns; at test time an unseen goal specifies a task composition that was never
+      demonstrated, and the planner decomposes it into subgoals that the unchanged policy executes.
+      Each tile shows the global goal (blue: head camera on top, wrist cameras below) next to the resulting rollout (red).
+    </p>
+
+    <section class="chart-section" aria-label="In-context task progress">
+      <div class="chart-card">
+        <div class="legend"><span class="l-base">In-domain goal</span><span class="l-ours">Out-of-distribution goal</span></div>
+        <div class="gbar-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))" id="icl-chart"></div>
+        <p class="table-caption">Task progress over 20 rollouts each. OOD averages combine two unseen goal configurations with different numbers of stages.</p>
+      </div>
+    </section>
+
+    <div id="icl-demos"></div>
+
+    <h3 class="subhead">Stage-wise success on in-context tasks</h3>
+    <div class="paper-table-wrap">
+      <table class="paper-table">
+        <thead><tr><th>Task</th><th>Stage</th><th>In-domain</th><th>OOD setting A</th><th>OOD setting B</th></tr></thead>
+        <tbody>
+          <tr><td class="rowhead" rowspan="6">Fruit Arrangement</td><td>S1</td><td>0.95</td><td>0.70</td><td>0.60</td></tr>
+          <tr><td>S2</td><td>0.70</td><td>0.30</td><td>0.40</td></tr>
+          <tr><td>S3</td><td>0.50</td><td>&ndash;</td><td>0.30</td></tr>
+          <tr><td>S4</td><td>&ndash;</td><td>&ndash;</td><td>0.10</td></tr>
+          <tr><td>Progress</td><td><b>0.72</b></td><td>0.50</td><td>0.35</td></tr>
+          <tr class="ours"><td>Progress avg.</td><td>0.72</td><td colspan="2">0.43</td></tr>
+          <tr><td class="rowhead" rowspan="5">Desktop Item Storage</td><td>S1</td><td>0.90</td><td>0.70</td><td>0.60</td></tr>
+          <tr><td>S2</td><td>0.75</td><td>&ndash;</td><td>0.30</td></tr>
+          <tr><td>S3</td><td>&ndash;</td><td>&ndash;</td><td>0.10</td></tr>
+          <tr><td>Progress</td><td><b>0.83</b></td><td>0.70</td><td>0.33</td></tr>
+          <tr class="ours"><td>Progress avg.</td><td>0.83</td><td colspan="2">0.52</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Simulation ============ -->
+<section class="section case-gallery-section" id="robotwin-section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 performance-title has-text-centered">RoboTwin Clean2Random</h2>
+    <p class="section-lead">
+      50 bimanual tasks on the Aloha AgileX embodiment, multi-task training on 2,500 <em>Clean</em> expert demonstrations, 100 rollouts per task under
+      <em>Clean</em> and <em>Random</em> conditions. <em>Clean</em> is nearly saturated across WAMs; the benefit of explicit subgoal selection shows up
+      exactly when the layout can no longer be memorized from demonstrations.
+    </p>
+
+    <section class="chart-section" aria-label="RoboTwin Random setting">
+      <div class="chart-card">
+        <p class="has-text-centered normal-highlight is-size-6"><span class="title-highlight">+25.2 pts</span> over the best prior WAM under <em>Random</em></p>
+        <p class="pipeline-caption">RoboTwin Clean2Random, <em>Random</em> success rate (%) (&uarr;)</p>
+        <div class="bar-chart" role="img" aria-label="Random success: ViGAR 67.02, pi0.5 46.00, 4D-WAM 41.80, LingbotVA 34.60, Cosmos3-Nano-RoboTwin 22.46">
+          <div class="bar-row"><span class="bar-label">ViGAR</span><div class="bar-track"><div class="bar-fill ours" style="--value: 67.02; --scale: 70"></div></div><span class="bar-value">67.02</span></div>
+          <div class="bar-row"><span class="bar-label">&pi;<sub>0.5</sub></span><div class="bar-track"><div class="bar-fill base" style="--value: 46.00; --scale: 70"></div></div><span class="bar-value">46.00</span></div>
+          <div class="bar-row"><span class="bar-label">4D-WAM</span><div class="bar-track"><div class="bar-fill base" style="--value: 41.80; --scale: 70"></div></div><span class="bar-value">41.80</span></div>
+          <div class="bar-row"><span class="bar-label">LingbotVA</span><div class="bar-track"><div class="bar-fill base" style="--value: 34.60; --scale: 70"></div></div><span class="bar-value">34.60</span></div>
+          <div class="bar-row"><span class="bar-label">no subgoal</span><div class="bar-track"><div class="bar-fill base2" style="--value: 22.46; --scale: 70"></div></div><span class="bar-value">22.46</span></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="two-col" style="margin-top:1.5rem">
+      <div>
+        <h3 class="subhead first">Policy success rate (%)</h3>
+        <div class="paper-table-wrap">
+          <table class="paper-table compact">
+            <thead><tr><th class="l">Model</th><th>Clean</th><th>Random</th><th>Avg.</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="4">Vision-language-action policies</td></tr>
+              <tr><td class="l">StarVLA</td><td>46.50</td><td>3.20</td><td>24.90</td></tr>
+              <tr><td class="l">Abot-M0</td><td>57.40</td><td>30.40</td><td>43.90</td></tr>
+              <tr><td class="l">X-VLA</td><td>68.00</td><td>20.90</td><td>44.50</td></tr>
+              <tr><td class="l">&pi;<sub>0.5</sub></td><td>70.70</td><td>46.00</td><td>58.40</td></tr>
+              <tr class="group"><td colspan="4">World-action models</td></tr>
+              <tr><td class="l">FastWAM</td><td>77.80</td><td>1.90</td><td>39.90</td></tr>
+              <tr><td class="l">LingbotVA</td><td>80.70</td><td>34.60</td><td>57.70</td></tr>
+              <tr><td class="l">4D-WAM</td><td class="second">81.50</td><td class="second">41.80</td><td class="second">61.70</td></tr>
+              <tr><td class="l">Cosmos3-Nano-RoboTwin<br><small>same recipe, no subgoal</small></td><td>77.06</td><td>22.46</td><td>49.76</td></tr>
+              <tr class="ours"><td class="l">ViGAR</td><td class="best">82.00</td><td class="best">67.02</td><td class="best">74.51</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-caption">Cosmos3-Nano-RoboTwin is post-trained on the same 2,500 trajectories with the same recipe as ViGAR, minus subgoal guidance.</p>
+      </div>
+      <div>
+        <h3 class="subhead first">Visual subgoal prediction quality</h3>
+        <div class="paper-table-wrap">
+          <table class="paper-table">
+            <thead><tr><th class="l">Model</th><th>LPIPS &darr;</th><th>DINO-cos &uarr;</th><th>&Delta;IoU &uarr;</th><th>RetAcc &uarr;</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="5">RoboTwin</td></tr>
+              <tr><td class="l">VISTA</td><td class="second">0.38</td><td class="second">0.54</td><td class="second">0.22</td><td class="second">0.82</td></tr>
+              <tr><td class="l">RxBrain</td><td>0.73</td><td>0.19</td><td>0.18</td><td>0.79</td></tr>
+              <tr class="ours"><td class="l">ViGAR <i>G<sub>&theta;</sub></i></td><td class="best">0.13</td><td class="best">0.80</td><td class="best">0.65</td><td class="best">0.94</td></tr>
+              <tr class="group"><td colspan="5">Real robot</td></tr>
+              <tr><td class="l">VISTA</td><td class="second">0.38</td><td class="second">0.61</td><td class="second">0.24</td><td class="second">0.31</td></tr>
+              <tr><td class="l">RxBrain</td><td>0.60</td><td>0.29</td><td>0.18</td><td>0.22</td></tr>
+              <tr class="ours"><td class="l">ViGAR <i>G<sub>&theta;</sub></i></td><td class="best">0.11</td><td class="best">0.81</td><td class="best">0.66</td><td class="best">0.76</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-caption">Predicted vs. ground-truth subgoals: perceptual distance, DINOv2 similarity, IoU of change masks, and subtask retrieval accuracy.</p>
+      </div>
+    </div>
+
+    <div class="pipeline-card" style="margin-top:1.5rem">
+      <img src="static/images/robotwin_rollouts.jpg" alt="RoboTwin rollouts: observation, predicted subgoal, executed observation and final state for Stack Blocks Three and Place Dual Shoes" class="pipeline-image" loading="lazy">
+      <p class="pipeline-caption"><b>Simulation rollouts.</b> Observation &rarr; predicted subgoal &rarr; executed observation &rarr; final state, for <i>Stack Blocks Three</i> (Clean) and <i>Place Dual Shoes</i> (Randomized).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BibTeX ============ -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <div class="bibtex-header">
+      <h2 class="title">BibTeX</h2>
+      <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+        <i class="fas fa-copy"></i>
+        <span class="copy-text">Copy</span>
+      </button>
+    </div>
+    <pre id="bibtex-code"><code>@article{gong2026vigar,
+      title={Rethinking World-Action Model for Compositional and In-Context Robotic Manipulation},
+      author={Shukai Gong and Xuanran Zhai and Yintianrun Zhang and Ruopeng Cui and Ye Huang and Yiyang Fu and Dexuan Lyu and Chaojie Li and Xinyi Song and Peiwen Lin and Chuang Wang and Mingyuan Jia and Yufan Deng and Jiaxin Fang and Yuxiang Gao and Jiaxin Li and Bo Liang and Hao Liu and Daquan Zhou},
+      year={2026},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO}
+}</code></pre>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This page was built with the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>.
+            It is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+            <br>
+            Magic Group | Peking University &nbsp;&middot;&nbsp; AgiBot
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ---------- data ----------
+const V = 'static/videos/web/';
+const TASKS = [
+  { id: 'stamp', name: 'Stamp over Letter', stages: 4, instr: 'Create a stamped mark on the sheet of paper with the ink stamp.',
+    scores: { pi: 0.79, cosmos: 0.71, ours: 0.89 }, sr: { pi: [1.00, 0.80, 0.70, 0.65], cosmos: [0.95, 0.85, 0.60, 0.45], ours: [1.00, 0.95, 0.80, 0.80] },
+    clips: [
+      ['stamp_over_letter_blue_bg', 'Blue mat', 66.2],
+      ['stamp_over_letter_green_bg', 'Green mat', 42.2]] },
+  { id: 'bowls', name: 'Stack Colored Bowls', stages: 3, instr: 'Group bowls of matching colors into separate stacks.',
+    scores: { pi: 0.48, cosmos: 0.55, ours: 0.68 }, sr: { pi: [0.70, 0.50, 0.25], cosmos: [0.75, 0.55, 0.35], ours: [0.85, 0.70, 0.50] },
+    clips: [
+      ['stack_colored_bowls_3bowls_rby', '3 colors', 83.1],
+      ['stack_colored_bowls_4bowls_rbgy', '4 colors · patterned cloth', 190.2]] },
+  { id: 'tidy', name: 'Tidy-up Desktop', stages: 4, instr: 'Clean up rubbish on the desk into the trash bin.',
+    scores: { pi: 0.64, cosmos: 0.58, ours: 0.61 }, sr: { pi: [0.85, 0.70, 0.55, 0.45], cosmos: [0.80, 0.65, 0.50, 0.35], ours: [0.85, 0.65, 0.55, 0.40] },
+    clips: [
+      ['tidy_up_desktop_blue_bg_bin_middle_2cups', 'Two cups', 138.5],
+      ['tidy_up_desktop_blue_bg_bin_left_cup_paper_lowquality', 'Cup + crumpled paper', 134.8]] },
+  { id: 'cups', name: 'Pile Paper Cups', stages: 3, instr: 'Build a single nested stack from the paper cups.', half: true,
+    scores: { pi: 0.82, cosmos: 0.65, ours: 0.85 }, sr: { pi: [0.95, 0.85, 0.65], cosmos: [0.85, 0.65, 0.45], ours: [0.90, 0.85, 0.80] },
+    clips: [['pile_paper_cups_blue_bg', 'Blue mat', 110.1]] },
+  { id: 'buns', name: 'Take-out Steam Buns', stages: 5, instr: 'Extract the buns from the bamboo steamer and set them down on a plate.', half: true,
+    scores: { pi: 0.27, cosmos: 0.19, ours: 0.42 }, sr: { pi: [0.60, 0.35, 0.25, 0.15, 0.00], cosmos: [0.50, 0.25, 0.15, 0.05, 0.00], ours: [0.65, 0.55, 0.45, 0.30, 0.15] },
+    clips: [['take_out_steam_buns_blue_bg_black_plate', 'Blue mat · black plate', 260.0]] },
+];
+const ICL = [
+  { name: 'Fruit Arrangement', instr: 'Place fruits into the basket. Act according to the subgoal image.', idn: 0.72, ood: 0.43,
+    note: 'In-domain goals place 3 fruits; goals with 2 or 4 fruits are out-of-distribution compositions.',
+    clips: [
+      ['fruit_icl_left2_right1', '2 fruits left · 1 right', 61.0, 'id'],
+      ['fruit_icl_left1_right1', '1 fruit left · 1 right', 54.0, 'ood'],
+      ['fruit_icl_left2_right2', '2 fruits left · 2 right', 79.0, 'ood'],
+      ['fruit_icl_left3_right1', '3 fruits left · 1 right', 86.0, 'ood']] },
+  { name: 'Desktop Item Storage', instr: 'Place items on the table into the plate. Act according to the subgoal image.', idn: 0.83, ood: 0.52,
+    note: 'In-domain goals store 2 items; goals with 1 or 3 items are out-of-distribution compositions.',
+    clips: [
+      ['desk_icl_2obj_ironcup_papercup', 'steel cup + paper cup', 74.7, 'id'],
+      ['desk_icl_2obj_ironcup_toy', 'steel cup + plush toy', 71.4, 'id'],
+      ['desk_icl_2obj_papercup_toy', 'paper cup + plush toy', 76.7, 'id'],
+      ['desk_icl_1obj_ironcup', 'steel cup only', 47.5, 'ood'],
+      ['desk_icl_1obj_toy', 'plush toy only', 39.3, 'ood'],
+      ['desk_icl_3obj', 'all three items', 130.7, 'ood']] },
+];
+const fmt = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+const bar = (label, v, cls, scale) => `<div class="bar-row"><span class="bar-label">${label}</span><div class="bar-track"><div class="bar-fill ${cls}" style="--value:${v};--scale:${scale}"></div></div><span class="bar-value">${v.toFixed(2)}</span></div>`;
+
+// ---------- real-robot chart ----------
+let rr = '';
+for (const t of TASKS) rr += `<div class="gbar"><p class="tp-head">${t.name} <small>· ${t.stages} stages</small></p>${bar('ViGAR', t.scores.ours, 'ours', 1)}${bar('π<sub>0.5</sub>', t.scores.pi, 'base', 1)}${bar('Cosmos3', t.scores.cosmos, 'base2', 1)}</div>`;
+rr += `<div class="gbar avg"><p class="tp-head">Average <span class="tp-speedup">+0.09</span></p>${bar('ViGAR', 0.69, 'ours', 1)}${bar('π<sub>0.5</sub>', 0.60, 'base', 1)}${bar('Cosmos3', 0.54, 'base2', 1)}</div>`;
+document.getElementById('rr-chart').innerHTML = rr;
+
+// ---------- ICL chart ----------
+document.getElementById('icl-chart').innerHTML = ICL.map(t => `<div class="gbar"><p class="tp-head">${t.name}</p>${bar('In-domain', t.idn, 'base', 1)}${bar('OOD', t.ood, 'ours', 1)}</div>`).join('');
+
+// ---------- demo tiles ----------
+const tile = (name, label, dur) => `<figure class="demo-tile"><div class="vwrap"><video muted playsinline loop autoplay controls preload="metadata" poster="${V}${name}.jpg" data-src="${V}${name}.mp4"></video><span class="badge">4&times;</span></div><figcaption><span>${label}</span></figcaption></figure>`;
+let td = '', inPair = false;
+for (const t of TASKS) {
+  if (t.half && !inPair) { td += '<div class="task-pair">'; inPair = true; }
+  if (!t.half && inPair) { td += '</div>'; inPair = false; }
+  td += `<div class="task-block${t.half ? ' half' : ''}" id="task-${t.id}"><div class="task-head"><h3>${t.name}</h3><span class="pill">${t.stages} subtasks</span><span class="score">task progress <b>${t.scores.ours.toFixed(2)}</b> <span style="color:#94a3b8">vs ${t.scores.pi.toFixed(2)} / ${t.scores.cosmos.toFixed(2)}</span></span></div>
+    <p class="task-instr">&ldquo;${t.instr}&rdquo;</p><div class="demo-grid ${t.clips.length === 4 ? 'cols4' : t.clips.length === 2 ? 'cols2' : 'cols1'}">${t.clips.map(c => tile(c[0], c[1], c[2])).join('')}</div></div>`;
+}
+if (inPair) td += '</div>';
+document.getElementById('task-demos').innerHTML = td;
+
+let ic = '';
+for (const t of ICL) {
+  ic += `<div class="task-block"><div class="task-head"><h3>${t.name}</h3><span class="score">in-domain <b>${t.idn.toFixed(2)}</b> &nbsp; OOD <b>${t.ood.toFixed(2)}</b></span></div>
+    <p class="task-instr">&ldquo;${t.instr}&rdquo; &nbsp;<span style="font-style:normal;color:#64748b">${t.note}</span></p>
+    <div class="icl-grid">${t.clips.map(c => `<figure class="icl-tile"><div class="pair">
+      <div class="goal"><img src="static/images/goals/${c[0]}.png" alt="global goal image" loading="lazy"><span class="tag">GLOBAL GOAL</span></div>
+      <div class="roll"><video muted playsinline loop autoplay controls preload="metadata" poster="${V}${c[0]}.jpg" data-src="${V}${c[0]}.mp4"></video><span class="tag">ROLLOUT</span><span class="badge">4&times;</span></div></div>
+      <figcaption><span>${c[1]}<span class="${c[3] === 'id' ? 'tag-id' : 'tag-ood'}">${c[3] === 'id' ? 'in-domain' : 'OOD goal'}</span></span></figcaption></figure>`).join('')}</div></div>`;
+}
+document.getElementById('icl-demos').innerHTML = ic;
+
+// ---------- stage table ----------
+let st = '';
+for (const t of TASKS) {
+  t.sr.ours.forEach((_, k) => { st += `<tr>${k === 0 ? `<td class="rowhead" rowspan="${t.stages + 1}">${t.name}</td>` : ''}<td>S${k + 1}</td><td>${t.sr.pi[k].toFixed(2)}</td><td>${t.sr.cosmos[k].toFixed(2)}</td><td>${t.sr.ours[k].toFixed(2)}</td></tr>`; });
+  const b = Math.max(t.scores.pi, t.scores.cosmos, t.scores.ours);
+  st += `<tr class="ours"><td>Progress</td><td class="${t.scores.pi === b ? 'best' : ''}">${t.scores.pi.toFixed(2)}</td><td class="${t.scores.cosmos === b ? 'best' : ''}">${t.scores.cosmos.toFixed(2)}</td><td class="${t.scores.ours === b ? 'best' : ''}">${t.scores.ours.toFixed(2)}</td></tr>`;
+}
+st += `<tr class="ours"><td class="rowhead" colspan="2">Average progress</td><td>0.60</td><td>0.54</td><td class="best">0.69</td></tr>`;
+document.querySelector('#stage-table tbody').innerHTML = st;
+
+// ---------- playback: lazy load + autoplay when visible ----------
+const vids = [...document.querySelectorAll('video[data-src]')];
+const io = new IntersectionObserver(es => {
+  for (const e of es) {
+    const v = e.target;
+    if (e.isIntersecting) { if (!v.src) { v.src = v.dataset.src; v.load(); } v.play().catch(() => {}); }
+    else if (v.src) v.pause();
+  }
+}, { threshold: 0.3 });
+vids.forEach(v => io.observe(v));
+
+// ---------- leaderboard + ablation bars ----------
+const lbRow = (name, v, max, dec, ours, sub) => `<div class="lb-row${ours ? ' ours' : ''}"><div class="lb-name">${name}${sub ? `<small>${sub}</small>` : ''}</div><div class="lb-track"><div class="lb-fill" style="width:${(v / max * 100).toFixed(1)}%"></div></div><div class="lb-val">${v.toFixed(dec)}</div></div>`;
+const lb = (id, rows, max, dec) => { document.getElementById(id).innerHTML = rows.slice().sort((a, b) => b[1] - a[1]).map(r => lbRow(r[0], r[1], max, dec, !!r[2], r[3])).join(''); };
+lb('lb-sim', [
+  ['ViGAR', 74.51, true, 'Clean 82.00 · Random 67.02'],
+  ['4D-WAM', 61.70, false, 'Clean 81.50 · Random 41.80'],
+  ['π<sub>0.5</sub>', 58.40, false, 'Clean 70.70 · Random 46.00'],
+  ['LingbotVA', 57.70, false, 'Clean 80.70 · Random 34.60'],
+  ['Cosmos3-Nano-RoboTwin', 49.76, false, 'same recipe, no subgoal · 77.06 / 22.46'],
+  ['X-VLA', 44.50, false, 'Clean 68.00 · Random 20.90'],
+  ['Abot-M0', 43.90, false, 'Clean 57.40 · Random 30.40'],
+  ['FastWAM', 39.90, false, 'Clean 77.80 · Random 1.90'],
+  ['StarVLA', 24.90, false, 'Clean 46.50 · Random 3.20']], 80, 2);
+lb('lb-real', [
+  ['ViGAR', 0.69, true, '5-task average'],
+  ['π<sub>0.5</sub>', 0.60, false, 'VLA baseline'],
+  ['Cosmos3-Nano-Policy', 0.54, false, 'same data & recipe, no subgoal']], 0.75, 2);
+lb('ab-sup', [
+  ['ViGAR', 74.51, true, 'Clean 82.00 · Random 67.02'],
+  ['w/o subgoal look-ahead', 72.86, false, 'Clean 79.80 · Random 65.92'],
+  ['w/o EEF ROI weighting', 72.46, false, 'Clean 79.28 · Random 65.64'],
+  ['w/o both', 62.54, false, 'Clean 72.68 · Random 52.40']], 80, 2);
+lb('ab-route', [
+  ['Generator (VAE latent)', 62.17, true, 'ViGAR · Clean 78.92 · Random 45.42'],
+  ['Generator + Reasoner', 61.72, false, 'Clean 82.16 · Random 41.28'],
+  ['Reasoner (ViT tokens)', 50.97, false, 'Clean 78.42 · Random 23.52'],
+  ['No goal', 49.18, false, 'Clean 76.58 · Random 21.78']], 80, 2);
+</script>
+</body>
+</html>
