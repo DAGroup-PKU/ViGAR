@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "veomni-goalwam-runtime"
+version = "0.1.0"
+requires-python = ">=3.13,<3.14"
+description = "Pinned native Cosmos3-Nano runtime for the VeOmni GoalWAM recipe"
+license = "LicenseRef-OpenMDW-1.1"
+license-files = ["LICENSE"]
+
+[tool.setuptools.packages.find]
+include = ["cosmos_framework*"]
+namespaces = true
+
+[tool.setuptools.package-data]
+"*" = ["*.json", "*.yaml", "*.toml", "*.txt"]

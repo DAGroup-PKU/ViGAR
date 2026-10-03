@@ -1,0 +1,17 @@
+Cosmos3-Nano / GoalWAM runtime
+Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+Licensed under OpenMDW-1.1; see LICENSE and individual source notices.
+
+Vendored from GoalWAM revision e1bece9854deedf9baa20778086499b23c0aaf94.
+source_record.json identifies every copied file and its adapted-source SHA256.
+
+The model, VAE, packing, flow-matching losses, fused optimizer, EMA and solvers
+retain native implementations. The native attention frontend inherits PyTorch
+deterministic mode, as validated before migration. OmniMoTModel has a mechanical
+deferred-construction boundary so the VeOmni trainer controls sharding.
+
+The native trainer module is retained because native configuration types import
+it. VeOmni never instantiates it or delegates its update loop to it. Legacy robot
+datasets, deployment/simulator code, checkpoints and machine environments are
+excluded. The recipe owns the 0824 geometry/normalization helpers extracted from
+Qwen3-PI; it does not import that policy.

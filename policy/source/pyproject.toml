@@ -1,0 +1,377 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project.urls]
+"Homepage" = "https://github.com/ByteDance-Seed/VeOmni"
+"Source Code" = "https://github.com/ByteDance-Seed/VeOmni"
+
+[project]
+name = "veomni"
+dynamic = ["version"]
+description = "VeOmni: Scaling any Modality Model Training to any Accelerators with PyTorch native Training Framework"
+readme = "README.md"
+requires-python = ">=3.12, <3.14"
+license = { file = "LICENSE" }
+authors = [
+  { name="ByteDance-Seed", email="doubao-llm@bytedance.com" },
+]
+
+dependencies = [
+  "blobfile>=3.0.0",
+  # "datasets>=2.16.0,<=2.21.0",
+  "datasets",
+  "packaging>=23.0,<26.0",
+  "torchdata>=0.8.0,<1.0",
+  "tiktoken>=0.9.0",
+  "diffusers>=0.30.0,<0.38.0",
+  # Comment out transformers version for pip user compatibility (not to accidentally install v5 which is still WIP
+  # and experimental)
+  # For uv user: The actual version is controlled by the "transformers-stable" default
+  # dependency-group (==4.57.6) or by the "transformers5-exp" optional extra (==5.2.0).
+  # For pip user: please install 4.57.6 manually via pip install transformers==4.57.6.
+  # "transformers==4.57.6",
+  "psutil",
+  "timm",
+  "wandb",
+  "moviepy>=2.2.1,<3.0",
+  "setuptools",
+  "einops>=0.8.1",
+  "h5py==3.16.0",
+  "lerobot==0.4.4",
+  "google-genai",
+  "httpx[socks]",
+  "openai",
+  "matplotlib",
+  "mcap>=1.3.0,<2.0",
+  "mcap-ros2-support>=0.5.0,<1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pre-commit>=4.0.0,<5.0",
+  "ruff>=0.7.0,<1.0",
+  "pytest>=6.0.0,<8.0",
+  "expecttest>=0.3.0,<0.4"
+]
+audio = [
+  "torchcodec",
+  "av==16.1.0",
+  "librosa>=0.11.0,<0.12",
+  # librosa's numba range still allows old releases that cannot install on Python 3.12.
+  "numba>=0.65.1",
+  "llvmlite>=0.47.0",
+  "soundfile>=0.13.1,<0.14"
+]
+# Alias for audio extra - includes both video and audio processing dependencies
+video = [
+  "torchcodec",
+  "av==16.1.0",
+  "librosa>=0.11.0,<0.12",
+  # librosa's numba range still allows old releases that cannot install on Python 3.12.
+  "numba>=0.65.1",
+  "llvmlite>=0.47.0",
+  "soundfile>=0.13.1,<0.14"
+]
+dit = [
+  "diffusers>=0.30.0,<0.38.0",
+  "bitsandbytes>=0.46.0,<=0.47.0"
+]
+# torch-npu 2.7.1 wheels are cp39–cp311 only; keep these pins off Python 3.12+ until NPU stacks publish cp312.
+npu_aarch64 = [
+  "torch==2.7.1; python_full_version < \"3.12\"",
+  "torch-npu==2.7.1; python_full_version < \"3.12\"",
+  "torchvision==0.22.1; python_full_version < \"3.12\"",
+  "torchaudio==2.7.1; python_full_version < \"3.12\"",
+  "decorator>=5.2.1; python_full_version < \"3.12\"",
+  "scipy>=1.16.2; python_full_version < \"3.12\"",
+]
+npu = [
+  "torch==2.7.1+cpu; python_full_version < \"3.12\"",
+  "torch-npu==2.7.1; python_full_version < \"3.12\"",
+  "torchvision==0.22.1+cpu; python_full_version < \"3.12\"",
+  "torchaudio==2.7.1+cpu; python_full_version < \"3.12\"",
+  "decorator>=5.2.1; python_full_version < \"3.12\"",
+  "scipy>=1.16.2; python_full_version < \"3.12\"",
+  "torchcodec>=0.4.0,<0.6.0; python_full_version < \"3.12\"",
+]
+gpu = [
+  "torch==2.10.0+cu128",
+  "torchvision==0.25.0+cu128",
+  "torchaudio==2.10.0+cu128",
+  "nvidia-cusparselt-cu12",
+  "nvidia-nccl-cu12",
+  "liger-kernel==0.7.0",
+  "flash-attn==2.7.4.post1+cu128.torch210",
+  "ninja",
+  "hf_transfer",
+  "torchcodec==0.10.0+cu128",
+  "cuda-python==12.9.4",
+  "torch-c-dlpack-ext",
+  # For models with linear attention like Qwen 3.5
+  "flash-linear-attention",
+  "quack-kernels==0.3.2",
+]
+megatron = [
+  "megatron-energon>=7.2.1"
+]
+trl = [
+  "trl<=0.9.6"
+]
+# Optional MCAP / ROS 2 dataset inspection tools.
+cobot_viz = [
+  "mcap>=1.3.0,<2.0",
+  "mcap-ros2-support>=0.5.0,<1.0",
+]
+
+fa4 = [
+  "flash-attn-4==0.1.0",
+  "nvidia-cutlass-dsl>=4.4.0"
+]
+
+# Experimental dep to install transformers 5.x.
+# Note that transformers 5.x support is experimental and WIP.
+# See https://github.com/ByteDance-Seed/VeOmni/issues/468 for the progress.
+# Usage: `uv sync --no-group transformers-stable --extra transformers5-exp --extra <other extra>`.
+transformers5-exp = [
+  "transformers==5.2.0"
+]
+
+[dependency-groups]
+# Follow the best practice in https://docs.astral.sh/uv/concepts/projects/dependencies/#development-dependencies
+# to manage dev dependencies (i.e., dependencies that are only used in development) like
+# test, lint and doc tools.
+dev = [
+  {include-group = "lint"},
+  {include-group = "test"},
+]
+lint = [
+  "pre-commit",
+  "ruff",
+]
+test = [
+  "rich",
+  "pytest",
+  "expecttest",
+]
+# Pin the default transformers version via a dependency group.
+# This is a default group (see default-groups below), so `uv sync` will
+# always install transformers==4.57.6 unless the user opts out with
+# `--no-group transformers-stable` (and opts in to `--extra transformers5-exp`).
+#
+# Why a dependency group instead of override-dependencies?
+# uv's override-dependencies replaces ALL occurrences of a package name globally.
+# When using `extra` markers in overrides (e.g. `extra != 'transformers5-exp'`),
+# uv converts them to impossible markers like `python_version < '0'`, which
+# silently removes transformers from the dependency tree entirely.
+# See: https://github.com/astral-sh/uv/issues/11153
+transformers-stable = [
+  "transformers==4.57.6"
+]
+
+diffusers-stable = ["diffusers==0.37.0"]
+
+# Cosmos3-Nano runtime used by recipes/GoalWAM. This is a default group so the
+# root .venv supports GoalWAM.
+goalwam = [
+  "veomni-goalwam-runtime",
+  "torchao==0.16.0+cu128",
+  "flash-attn-3-nv==1.0.3+cu128.torch210",
+  "natten==0.21.6.dev6+cu128.torch210",
+  "transformer-engine==2.12.0+cu128.torch210",
+  "nvidia-cudnn-frontend==1.18.0",
+  "accelerate",
+  "attrs",
+  "cattrs",
+  "hydra-core",
+  "omegaconf",
+  "loguru",
+  "imageio[ffmpeg]",
+  "msgpack",
+  "nvidia-ml-py",
+  "obstore",
+  "pydantic",
+  "scipy==1.17.1",
+  "termcolor",
+  "tyro",
+  "websockets",
+  "pyarrow",
+  "pyyaml",
+  "aioboto3",
+  "aiofiles",
+  "boto3",
+  "ftfy",
+  "iopath",
+  "webdataset",
+  "einx",
+  "kornia",
+  "peft",
+  "ninja",
+  "tensorstore",
+  "pytz",
+  "qwen-vl-utils==0.0.14",
+  "multi-storage-client[boto3,fsspec]==0.44.0",
+  "numpy==2.2.6",
+  "safetensors==0.7.0",
+  "pillow==11.3.0",
+]
+
+[tool.uv]
+# The common GoalWAM runtime uses NVIDIA's CPython 3.13 Cosmos wheels.
+environments = ["python_version == '3.13'"]
+# This sets the minimum uv version so that we have a consistent baseline across the board.
+# Inconsistent uv versions might generate different uv lock files which creates chaos.
+#
+# NOTE 1: Update this at least once per month as uv releases new version every week.
+# NOTE 2: When updating this line, make sure to update Dockerfile under docker/ to the same
+#         version and release new docker images.
+required-version = ">=0.11.3"
+no-build-isolation-package = [
+    "flash-attn",
+]
+
+# The "transformers-stable" dependency group is synced by default, ensuring
+# that `uv sync` (with no extra flags) installs transformers==4.57.6.
+# To use transformers 5, run:
+#   uv sync --no-group transformers-stable --extra transformers5-exp
+default-groups = ["transformers-stable", "diffusers-stable", "goalwam"]
+
+override-dependencies = [
+    # Adding the (extra == 'gpu') mark to declare this override is only for gpu extra.
+    # Without this mark, uv would download torch/torchaudio/torchvision unexpectedly from
+    # PyPI without using the cu128 wheels.
+    # Ref: https://github.com/astral-sh/uv/issues/11153
+    "torch==2.10.0+cu128; (extra == 'gpu')",
+    "torchaudio==2.10.0+cu128; (extra == 'gpu')",
+    "torchvision==0.25.0+cu128; (extra == 'gpu')",
+    "torchcodec==0.10.0+cu128; (extra == 'gpu')",
+    # The maintained LeRobot 0.4.4 data path is compatible with diffusers 0.37;
+    # its published <0.36 metadata bound otherwise conflicts with Cosmos3-Nano.
+    "diffusers==0.37.0",
+    # Adding explicit override for NPU backends - aarch64 variant
+    "torch==2.7.1; (extra == 'npu_aarch64')",
+    "torchaudio==2.7.1; (extra == 'npu_aarch64')",
+    "torchvision==0.22.1; (extra == 'npu_aarch64')",
+    "torchcodec>=0.4.0,<0.6.0; (extra == 'npu_aarch64')",
+    # Adding explicit override for NPU backends - x86 variant (default npu)
+    "torch==2.7.1+cpu; (extra == 'npu')",
+    "torchaudio==2.7.1+cpu; (extra == 'npu')",
+    "torchvision==0.22.1+cpu; (extra == 'npu')",
+    "torchcodec>=0.4.0,<0.6.0; (extra == 'npu')",
+
+    # NOTE: The transformers overrides that were previously here have been removed.
+    # They used `extra != 'transformers5-exp'` markers which uv converts to
+    # `python_version < '0'` (always false), silently removing transformers
+    # from the dependency tree. The version pinning is now handled by the
+    # "transformers-stable" default dependency group + conflicts declaration.
+
+    # lerobot (and similar stacks) enforce huggingface-hub>=0.34.0,<1.0 at import time; 1.x raises
+    # ImportError. Pin the resolver to that range so locks/installs stay compatible with those paths.
+    "huggingface-hub>=0.34.0,<1.0",
+    # lerobot pins av>=15,<16; pin av to 16.1.0 for a consistent resolver result across extras.
+    "av==16.1.0",
+
+    # Match the validated Cosmos3-Nano Torch 2.10 runtime.
+    "nvidia-cudnn-cu12==9.10.2.21",
+]
+
+conflicts = [
+  [
+    { extra = "gpu" },
+    { extra = "npu" },
+    { extra = "npu_aarch64" },
+  ],
+  # transformers version conflicts: the "transformers-stable" dependency group
+  # pins to 4.x while the "transformers5-exp" extra pins to 5.x.
+  # Declaring them as conflicting allows uv to resolve both forks independently.
+  [
+    { group = "transformers-stable" },
+    { extra = "transformers5-exp" },
+  ],
+]
+
+index-url = "https://mirrors.aliyun.com/pypi/simple/"
+
+[tool.uv.sources]
+# To support override-dependencies for multiple extras, one package can only have one index.
+# Using pytorch index for all variants since it has both regular and +cpu versions
+torch = [
+  { index = "pytorch", marker = "(extra == 'npu' or extra == 'npu_aarch64')" },
+  # Due to some unknown bugs, uv might resolve to a wheel from https://download.pytorch.org/whl/cu128_full which does
+  # not include the proper dependencies on nvidia packages like nvidia-cublas and nvidia-nccl. This confuses uv to uninstall
+  # those nvidia packages.
+  #
+  # By forcing it to the proper package here, we avoid the problem that uv could randomly resolve to other packages.
+  #
+  # NOTE: WHEN UPDATE TORCH VERSIONS, PLEASE UPDATE THIS TO THE CORRESPONDING WHEEL URL.
+  { url = "https://download.pytorch.org/whl/cu128/torch-2.10.0%2Bcu128-cp313-cp313-manylinux_2_28_x86_64.whl", extra = 'gpu' },
+]
+torchvision = { index = "pytorch" }
+torchaudio = { index = "pytorch" }
+torchcodec = { index = "pytorch" }
+torchao = { index = "pytorch" }
+triton = { index = "pytorch" }
+veomni-goalwam-runtime = { path = "third_party/goalwam", editable = true }
+flash-attn = { index = "cosmos" }
+flash-attn-3-nv = { index = "cosmos" }
+natten = { index = "cosmos" }
+transformer-engine = { index = "cosmos" }
+# FlashAttention 4 is developed under flash-attention/flash-attn/cute folder as a standalone python project.
+# Pinned to 03/10/2026 latest main commit.
+flash-attn-4 = { git = "https://github.com/Dao-AILab/flash-attention", subdirectory = "flash_attn/cute", rev = "7fd16f28bffe71c9ab6b7eecc5dd14bf87c1dc9e" }
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu/"
+explicit = true
+
+[[tool.uv.index]]
+name = "cosmos"
+url = "https://nvidia-cosmos.github.io/cosmos-dependencies/v1.5.0"
+explicit = true
+
+[[tool.uv.dependency-metadata]]
+name = "flash-attn"
+requires-dist = ["torch"]
+
+[tool.setuptools.dynamic]
+version = {attr = "veomni.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tests*", "ci*", "configs*", "veomni_patch", "tasks", "scripts"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 119
+indent-width = 4
+
+[tool.ruff.lint]
+ignore = ["C901", "E501", "E741", "W605", "C408"]
+select = ["C", "E", "F", "I", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401", "F403", "F811"]
+"veomni/models/transformers/**/generated/*.py" = ["E402"]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+known-first-party = ["veomni"]
+known-third-party = ["torch", "transformers", "wandb"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.pytest.ini_options]
+markers = [
+    "benchmark: marks tests as benchmark tests (deselect with '-m \"not benchmark\"')",
+    "qwen3_5_ulysses: Qwen3.5 GatedDeltaNet Ulysses SP tests (run when ulysses or qwen3_5 code is touched)",
+]

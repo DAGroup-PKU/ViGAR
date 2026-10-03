@@ -1,0 +1,23 @@
+{
+  "approved": true,
+  "backend": "eager_graph",
+  "same_instance_exact": true,
+  "tested_images": 6,
+  "tested_outputs": 12,
+  "upstream_commit": "b08991b99653245680bf1807cf5ba9dd3b051b30",
+  "adaptation": "Exact-shape eager CUDA Graph with bounded LRU replacement",
+  "max_graphs": 16,
+  "steps": 35,
+  "guidance": 2.5,
+  "shift": 5,
+  "regular": true,
+  "startup_same_instance_check": true,
+  "caveat": "12 tested outputs, not a proof over all possible inputs or hardware; new server validates against its own eager model before enabling",
+  "code_sha256": {
+    "inference_backend.py": "44760d8d4dfd9a43491583cced39960055b8b95dc403f49f7dab768096da9c79",
+    "eager_cuda_graph.py": "55fb08129cb0f1eda5a5f2745ec9313c0349e938f6a32b7be8014d9e5c13ec57"
+  },
+  "hardware_validation": "B200 measured; H200 first-request same-instance exact check mandatory before enabling",
+  "original_framework_unchanged": true,
+  "B200_original_core_rpc_verified": true
+}
