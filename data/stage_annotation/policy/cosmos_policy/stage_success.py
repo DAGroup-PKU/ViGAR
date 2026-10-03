@@ -1,15 +1,9 @@
-"""Authoritative RoboTwin stage-success contract for fixed-frame subgoals.
+"""Offline RoboTwin stage-success predicates for the final task configuration.
 
-The contract in this module is the single source of truth for three consumers:
-
-* expert replay chooses the first recorded frame for which a stage succeeds;
-* online rollout advances to the next fixed visual goal on the same condition;
-* atomic-stage evaluation scores the isolated transition with the same condition.
-
-Only the terminal stage delegates to RoboTwin's official ``check_success``.
-Internal stages deliberately use task state rather than a fitted expert pose, so
-the condition is seed-independent and can be monotonically latched by the
-controller after its first true observation.
+Expert replay chooses the first recorded frame satisfying each retained stage.
+Only terminal stages delegate to RoboTwin's official check_success. Intermediate
+predicates use task state, preserving the released annotation semantics.
+The public online rollout does not import this offline registry.
 """
 
 from __future__ import annotations
@@ -22,211 +16,26 @@ import numpy as np
 from cosmos_policy.task_metrics import count_put_bottles_in_dustbin
 
 
-STAGE_CONTRACT_VERSION = "robotwin-stage-success/v6"
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from task_config import CONFIG, CONFIG_SHA256, SUBGOAL_TASKS
+
+STAGE_CONTRACT_VERSION = CONFIG["stage_contract_version"]
 STAGE_SCALAR_PREFIX = "__stage_success__"
-
-
-TASK_STAGE_TEXTS: dict[str, tuple[str, ...]] = {
-    "open_microwave": (
-        "Open the microwave door about one quarter while maintaining control of the handle.",
-        "Open the microwave door to the required final angle.",
-    ),
-    "open_laptop": (
-        "Raise the laptop lid to a clearly partially open angle.",
-        "Open the laptop lid to the required final angle.",
-    ),
-    "handover_mic": (
-        "Present the microphone in the central handover region while the giving hand still holds it.",
-        "Transfer the microphone so only the receiving hand holds it.",
-    ),
-    "handover_block": (
-        "Transfer the block so the receiving hand holds it and the giving hand has released it.",
-        "Place and release the block at the final target.",
-    ),
-    "hanging_mug": (
-        "Secure the mug in the receiving right hand after the handoff.",
-        "Hang the mug securely on the target rack.",
-    ),
-    "dump_bin_bigbin": (
-        "Hold the small trash bin with the left hand in a stable pour-ready pose above the large bin.",
-        "Dump the contents of the small bin into the large bin.",
-    ),
-    "beat_block_hammer": (
-        "Hold the hammer aligned above the target block without striking it.",
-        "Strike the target block with the hammer.",
-    ),
-    "stamp_seal": (
-        "Hold the seal aligned just above the stamping target.",
-        "Press the seal onto the target and complete the stamp.",
-    ),
-    "move_playingcard_away": (
-        "Lift the playing card clearly away from the table center.",
-        "Move and release the playing card at the required final location.",
-    ),
-    "place_phone_stand": (
-        "Hold the phone aligned at the entrance of the phone stand.",
-        "Insert and release the phone securely in the stand.",
-    ),
-    "place_bread_basket": (
-        "Place one bread securely inside the basket.",
-        "Place all remaining bread securely inside the basket.",
-    ),
-    "place_cans_plasticbox": (
-        "Place one can securely inside the plastic box.",
-        "Place both cans securely inside the plastic box.",
-    ),
-    "place_dual_shoes": (
-        "Place one shoe securely at its target location.",
-        "Place both shoes securely at their target locations.",
-    ),
-    "put_bottles_dustbin": (
-        "Place one bottle securely inside the dustbin.",
-        "Place two bottles securely inside the dustbin.",
-        "Place all three bottles securely inside the dustbin.",
-    ),
-    "place_can_basket": (
-        "Place the can securely inside the basket.",
-        "Lift the basket while keeping the can inside.",
-    ),
-    "place_object_basket": (
-        "Place the object securely inside the basket.",
-        "Lift the basket while keeping the object inside.",
-    ),
-    "put_object_cabinet": (
-        "Open the cabinet sufficiently for placing the object inside.",
-        "Place the object securely inside the cabinet.",
-    ),
-    "blocks_ranking_rgb": (
-        "Place the first colored block at its ranked target.",
-        "Place the second colored block at its ranked target.",
-        "Complete the color ranking by placing all blocks at their targets.",
-    ),
-    "blocks_ranking_size": (
-        "Place the first block at its size-ranked target.",
-        "Place the second block at its size-ranked target.",
-        "Complete the size ranking by placing all blocks at their targets.",
-    ),
-    "stack_blocks_two": (
-        "Place the first block stably at the stack location.",
-        "Complete a stable stack of two blocks.",
-    ),
-    "stack_blocks_three": (
-        "Place the first block stably at the stack location.",
-        "Complete a stable stack of two blocks.",
-        "Complete a stable stack of three blocks.",
-    ),
-    "stack_bowls_three": (
-        "Place the first bowl stably at the stack location.",
-        "Complete a stable stack of two bowls.",
-        "Complete a stable stack of three bowls.",
-    ),
+TASK_STAGE_TEXTS = {
+    name: tuple(CONFIG["tasks"][name]["stage_texts"]) for name in SUBGOAL_TASKS
 }
-
-SUBGOAL_TASKS = frozenset(TASK_STAGE_TEXTS)
-
 
 @dataclass(frozen=True)
 class StageCriterion:
-    """Serializable documentation for one stage endpoint."""
-
     name: str
     description: str
 
-
-TASK_STAGE_CRITERIA: dict[str, tuple[StageCriterion, ...]] = {
-    "open_microwave": (
-        StageCriterion("door_fraction_at_least_0_25", "normalized door joint >= 0.25"),
-        StageCriterion("official_success", "RoboTwin check_success (door fraction >= 0.60)"),
-    ),
-    "open_laptop": (
-        StageCriterion("lid_fraction_at_least_0_30", "normalized lid joint >= 0.30"),
-        StageCriterion("official_success", "RoboTwin check_success"),
-    ),
-    "handover_mic": (
-        StageCriterion("donor_presents_in_center", "microphone is in the handover region and retained by the donor"),
-        StageCriterion("official_success", "RoboTwin receiver-only ownership check"),
-    ),
-    "handover_block": (
-        StageCriterion("receiver_owns_block", "right receiver grips the block after left donor release"),
-        StageCriterion("official_success", "RoboTwin final placement check"),
-    ),
-    "hanging_mug": (
-        StageCriterion("right_receiver_owns_mug", "right gripper securely holds the mug after handoff"),
-        StageCriterion("official_success", "RoboTwin hanging check"),
-    ),
-    "dump_bin_bigbin": (
-        StageCriterion("left_pour_ready", "desk bin is held by the left gripper above the large bin before dumping"),
-        StageCriterion("official_success", "RoboTwin dumped-garbage check"),
-    ),
-    "beat_block_hammer": (
-        StageCriterion("hammer_prestrike_aligned", "grasped hammer head aligned above block without block contact"),
-        StageCriterion("official_success", "RoboTwin hammer/block contact check"),
-    ),
-    "stamp_seal": (
-        StageCriterion("seal_prepress_aligned", "grasped seal aligned above target before release"),
-        StageCriterion("official_success", "RoboTwin stamped-and-released check"),
-    ),
-    "move_playingcard_away": (
-        StageCriterion("card_displaced_while_held", "card abs(x) >= 0.18 while still held"),
-        StageCriterion("official_success", "RoboTwin abs(x) > 0.23 and released check"),
-    ),
-    "place_phone_stand": (
-        StageCriterion("phone_at_stand_entry", "phone functional point is within the stand-entry envelope while either arm still grasps it"),
-        StageCriterion("official_success", "RoboTwin insertion-and-release check"),
-    ),
-    "place_bread_basket": (
-        StageCriterion("bread_count_at_least_1", "at least one bread satisfies RoboTwin basket geometry"),
-        StageCriterion("official_success", "RoboTwin all-bread placement check"),
-    ),
-    "place_cans_plasticbox": (
-        StageCriterion("can_count_at_least_1", "at least one can satisfies RoboTwin box geometry"),
-        StageCriterion("official_success", "RoboTwin both-can placement check"),
-    ),
-    "place_dual_shoes": (
-        StageCriterion("shoe_count_at_least_1", "at least one shoe is within the partial-placement target envelope (quaternion tolerance 0.08)"),
-        StageCriterion("official_success", "RoboTwin both-shoe placement check"),
-    ),
-    "put_bottles_dustbin": (
-        StageCriterion("bottle_count_at_least_1", "RoboTwin dustbin count >= 1"),
-        StageCriterion("bottle_count_at_least_2", "RoboTwin dustbin count >= 2"),
-        StageCriterion("official_success", "RoboTwin all-three-bottles check"),
-    ),
-    "place_can_basket": (
-        StageCriterion("can_inside_basket", "can contacts basket, is off the table, and lies within basket envelope"),
-        StageCriterion("official_success", "RoboTwin lift-basket-with-can check"),
-    ),
-    "place_object_basket": (
-        StageCriterion("object_inside_basket", "object contacts basket, is off the table, and lies within basket envelope"),
-        StageCriterion("official_success", "RoboTwin lift-basket-with-object check"),
-    ),
-    "put_object_cabinet": (
-        StageCriterion("cabinet_fraction_at_least_0_35", "normalized cabinet joint >= 0.35"),
-        StageCriterion("official_success", "RoboTwin object-in-cabinet check"),
-    ),
-    "blocks_ranking_rgb": (
-        StageCriterion("ranked_prefix_at_least_1", "first RGB block is at its seed-specific target"),
-        StageCriterion("ranked_prefix_at_least_2", "first two RGB blocks are at their seed-specific targets"),
-        StageCriterion("official_success", "RoboTwin complete RGB ordering check"),
-    ),
-    "blocks_ranking_size": (
-        StageCriterion("ranked_prefix_at_least_1", "first expert-placed size block is at its target"),
-        StageCriterion("ranked_prefix_at_least_2", "first two expert-placed size blocks are at their targets"),
-        StageCriterion("official_success", "RoboTwin complete size ordering check"),
-    ),
-    "stack_blocks_two": (
-        StageCriterion("base_block_stable", "block1 is at the seed-specific stack base"),
-        StageCriterion("official_success", "RoboTwin two-block stack check"),
-    ),
-    "stack_blocks_three": (
-        StageCriterion("base_block_stable", "block1 is at the seed-specific stack base"),
-        StageCriterion("stable_layers_at_least_2", "block2 is stably stacked on block1"),
-        StageCriterion("official_success", "RoboTwin three-block stack check"),
-    ),
-    "stack_bowls_three": (
-        StageCriterion("base_bowl_stable", "bowl1 is at the seed-specific stack base"),
-        StageCriterion("stable_layers_at_least_2", "bowl2 is stably stacked on bowl1"),
-        StageCriterion("official_success", "RoboTwin three-bowl stack check"),
-    ),
+TASK_STAGE_CRITERIA = {
+    name: tuple(StageCriterion(**row) for row in CONFIG["tasks"][name]["stage_criteria"])
+    for name in SUBGOAL_TASKS
 }
 
 
@@ -242,7 +51,7 @@ def stage_count_for_task(task_name: str, task_env: Any | None = None) -> int:
     try:
         count = len(TASK_STAGE_TEXTS[task_name])
     except KeyError as exc:
-        raise KeyError(f"no v6 stage contract for {task_name!r}") from exc
+        raise KeyError(f"no stage contract for {task_name!r}") from exc
     if task_name == "place_bread_basket" and task_env is not None:
         breads = getattr(task_env, "bread", None)
         if breads is not None and len(breads) <= 1:
@@ -435,8 +244,6 @@ def _bowl_pair_stable(lower: Any, upper: Any) -> bool:
 
 
 def _internal_stage_success(task_env: Any, task_name: str, phase: int) -> bool:
-    if task_name == "open_microwave":
-        return _normalised_joint(task_env.microwave) >= 0.25
     if task_name == "open_laptop":
         return _normalised_joint(task_env.laptop) >= 0.30
     if task_name == "handover_mic":
@@ -447,12 +254,6 @@ def _internal_stage_success(task_env: Any, task_name: str, phase: int) -> bool:
             bool(np.all(np.abs(point - middle) < [0.09, 0.10, 0.13]))
             and _is_closed(task_env, arm)
             and _arm_contacts_entity(task_env, task_env.microphone, arm)
-        )
-    if task_name == "handover_block":
-        return (
-            _is_closed(task_env, "right")
-            and _is_open(task_env, "left")
-            and _arm_contacts_entity(task_env, task_env.box, "right")
         )
     if task_name == "hanging_mug":
         return (
@@ -530,8 +331,6 @@ def _internal_stage_success(task_env: Any, task_name: str, phase: int) -> bool:
         return count_put_bottles_in_dustbin(task_env) >= phase + 1
     if task_name == "place_can_basket":
         return _object_inside_basket(task_env, task_env.can, str(task_env.can_name))
-    if task_name == "place_object_basket":
-        return _object_inside_basket(task_env, task_env.object, str(task_env.object_name))
     if task_name == "put_object_cabinet":
         return _normalised_joint(task_env.cabinet) >= 0.35
     if task_name == "blocks_ranking_rgb":
@@ -554,7 +353,7 @@ def _internal_stage_success(task_env: Any, task_name: str, phase: int) -> bool:
 
 
 def task_stage_success(task_env: Any, task_name: str, phase: int) -> bool:
-    """Evaluate one stage with the v6 contract.
+    """Evaluate one stage with the contract.
 
     Phase indices name visual goals: phase zero is the first goal.  The final
     phase always delegates to RoboTwin's official success function; preceding
@@ -605,6 +404,7 @@ def stage_contract_manifest() -> dict[str, Any]:
         }
     return {
         "contract_version": STAGE_CONTRACT_VERSION,
+        "task_config_sha256": CONFIG_SHA256,
         "switch_confirmation_steps": 1,
         "switch_latch": "monotonic",
         "catch_up": "furthest_satisfied_stage",
@@ -618,5 +418,5 @@ if set(TASK_STAGE_CRITERIA) != set(TASK_STAGE_TEXTS):
 for _task_name, _texts in TASK_STAGE_TEXTS.items():
     if len(_texts) != len(TASK_STAGE_CRITERIA[_task_name]):
         raise AssertionError(f"stage text/criterion length mismatch for {_task_name}")
-if len(SUBGOAL_TASKS) != 22:
-    raise AssertionError(f"expected 22 v6 stage tasks, found {len(SUBGOAL_TASKS)}")
+if len(SUBGOAL_TASKS) != 19:
+    raise AssertionError(f"expected 19 stage tasks, found {len(SUBGOAL_TASKS)}")

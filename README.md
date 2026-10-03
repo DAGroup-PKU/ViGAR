@@ -58,12 +58,14 @@ policy/       Native model, training, transforms, normalization and policy serve
 i2i/          Plain I2I and two ROI training stages; separate pinned runtimes
 evaluation/   Strict Sync, RPC, checked CUDA graphs and resumable seed queue
 simulation/   RoboTwin task environments, instruction templates and configuration
-data/         Stage-v7 builders, native49D conversion and goal generation/curation
+data/         Final task configuration, stage annotation, 49D action conversion and goal generation
 configs/      Selected recipe and fixed evaluation seeds/instructions
 scripts/      Training, preparation, evaluation and integrity entrypoints
 tests/        Release contract tests
 licenses/     Additional upstream license texts
 ```
+
+Offline data preparation uses one [final task configuration](data/task_config.json): **19 multi-stage tasks + 31 final-goal tasks**. Stage annotation feeds goal generation directly; 49D action conversion is a separate representation step. Run `python data/pipeline.py summary` to inspect the configuration.
 
 Simulator assets, trajectories and generated-goal caches must be installed separately. See [data preparation](docs/DATA.md).
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and merge sharded RoboTwin v6 stage-boundary manifests."""
+"""Validate and merge sharded RoboTwin stage-boundary manifests."""
 
 from __future__ import annotations
 
@@ -15,10 +15,13 @@ from typing import Any
 sys.path.append(str(Path(__file__).resolve().parents[1] / "policy"))
 
 from cosmos_policy.stage_success import (  # noqa: E402
+    CONFIG_SHA256,
     STAGE_CONTRACT_VERSION,
     SUBGOAL_TASKS,
     TASK_STAGE_TEXTS,
 )
+from task_config import require_config
+
 
 
 def parse_args() -> argparse.Namespace:
@@ -53,6 +56,7 @@ def main() -> int:
                 if not line.strip():
                     continue
                 row = json.loads(line)
+                require_config(row)
                 if row.get("contract_version") != STAGE_CONTRACT_VERSION:
                     raise ValueError(
                         f"{path}:{line_number}: wrong contract version"
@@ -69,6 +73,7 @@ def main() -> int:
                 if not line.strip():
                     continue
                 row = json.loads(line)
+                require_config(row)
                 if row.get("contract_version") != STAGE_CONTRACT_VERSION:
                     raise ValueError(
                         f"{path}:{line_number}: wrong replacement contract version"
@@ -80,7 +85,7 @@ def main() -> int:
     replacement_tasks = sorted({task for task, _ in replacement_records})
     for task_name in replacement_tasks:
         if task_name not in SUBGOAL_TASKS:
-            raise ValueError(f"replacement task has no v6 contract: {task_name}")
+            raise ValueError(f"replacement task has no contract: {task_name}")
         actual = {
             episode
             for task, episode in replacement_records
@@ -107,7 +112,7 @@ def main() -> int:
     extra = sorted(set(records) - expected)
     if missing or extra:
         raise ValueError(
-            f"coverage must be exactly 22x50; records={len(records)} "
+            f"coverage must be exactly 19x50; records={len(records)} "
             f"missing={missing[:20]} extra={extra[:20]}"
         )
 
@@ -203,6 +208,7 @@ def main() -> int:
             )
     summary = {
         "contract_version": STAGE_CONTRACT_VERSION,
+        "task_config_sha256": CONFIG_SHA256,
         "records": len(records),
         "tasks": len(SUBGOAL_TASKS),
         "episodes_per_task": 50,

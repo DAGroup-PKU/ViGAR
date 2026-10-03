@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np,pyarrow as pa,pyarrow.parquet as pq
 from reference.geometry import ACTION_MASK,STATE_MASK
 ROOT=Path(os.environ['VIGAR_DATASET49_WORK'])
-OLD=Path(os.environ['VIGAR_DATASET_V7'])
+OLD=Path(os.environ['VIGAR_ANNOTATED_DATASET'])
 def main():
  proof=json.loads((ROOT/'METADATA_RECOVERED.json').read_text());assert proof['episodes']==2500 and proof['action_equals_state']==2500
  out=ROOT/'dataset49';(out/'meta/episodes/chunk-000').mkdir(parents=True,exist_ok=True);(out/'data/chunk-000').mkdir(parents=True,exist_ok=True)

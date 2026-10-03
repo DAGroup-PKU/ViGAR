@@ -584,11 +584,11 @@ class ExpertSubtaskCapture:
         *,
         final_state: dict[str, Any] | None,
     ) -> list[dict[str, Any]]:
-        """Build fixed-frame refs from first v6 stage-success observations."""
+        """Build fixed-frame refs from first stage-success observations."""
 
         if self.stage_count is None:
             raise OracleSubtaskContractError(
-                f"task {self.task_name!r} has no v6 stage count"
+                f"task {self.task_name!r} has no stage count"
             )
         task_name = str(task_contract.get("simulator_task", self.task_name))
         if task_name != self.task_name:
@@ -599,7 +599,7 @@ class ExpertSubtaskCapture:
         canonical_texts = stage_texts_for_task(task_name, self.task_env)
         if len(canonical_texts) != self.stage_count:
             raise OracleSubtaskContractError(
-                f"v6 text count mismatch for {task_name}: {len(canonical_texts)}"
+                f"text count mismatch for {task_name}: {len(canonical_texts)}"
             )
         missing = [
             phase
@@ -608,7 +608,7 @@ class ExpertSubtaskCapture:
         ]
         if missing:
             raise OracleSubtaskContractError(
-                f"expert never satisfied v6 internal stages {missing}; "
+                f"expert never satisfied internal stages {missing}; "
                 f"frames={self.frame_count} contract={STAGE_CONTRACT_VERSION}"
             )
         episode_final_state = final_state or capture_simulator_state(self.task_env)
@@ -632,7 +632,7 @@ class ExpertSubtaskCapture:
                 visual_goal_policy = "first_stage_success_frame"
                 if frame_count <= previous_frame:
                     raise OracleSubtaskContractError(
-                        f"v6 stages are not strictly ordered at phase {phase}: "
+                        f"stages are not strictly ordered at phase {phase}: "
                         f"previous={previous_frame} current={frame_count}"
                     )
             signature = build_transition_signature(
@@ -650,13 +650,13 @@ class ExpertSubtaskCapture:
             endpoint_true = state_matches_predicate(endpoint_state, signature)
             if signature["required_components"] <= 0 or not endpoint_true:
                 raise OracleSubtaskContractError(
-                    f"v6 stage {phase} failed its own endpoint contract: "
+                    f"stage {phase} failed its own endpoint contract: "
                     f"components={signature['required_components']} "
                     f"start_false={start_false} endpoint_true={endpoint_true}"
                 )
             if not terminal_phase and not start_false:
                 raise OracleSubtaskContractError(
-                    f"v6 internal stage {phase} already holds at phase start"
+                    f"internal stage {phase} already holds at phase start"
                 )
             refs.append(
                 {

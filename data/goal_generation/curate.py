@@ -1,10 +1,11 @@
-"""Small audited VLM screening pilot; never edits datasets or admits goals automatically."""
+"""Optional VLM screening and explicit human review of prepared training goals."""
 import argparse
 import base64
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import html
 import json
+import os
 from pathlib import Path
 import random
 import shutil
@@ -12,7 +13,10 @@ import time
 
 from gateway import request, output_text
 
-MODEL = 'gpt-5.6-sol'
+MODEL = os.environ.get('GOALWAM_VLM_MODEL')
+EFFORT = os.environ.get('GOALWAM_VLM_EFFORT', 'high')
+from common import load_prepared, inside
+from urllib.parse import quote
 METRICS = ['semantic_match', 'object_identity_color', 'object_target_geometry',
            'robot_contact_geometry', 'physical_plausibility', 'background_preservation']
 PROMPT = '''You are a blinded RoboTwin goal-image quality auditor, not a robot success oracle.
@@ -48,41 +52,6 @@ def write(path, value):
     tmp.replace(path)
 
 
-def prepare(source, out):
-    rows = json.loads((source / 'manifest.json').read_text())
-    for r in rows:
-        for name in ('input_rgb.png', 'gt_rgb.png', 'rgb.generated.png', 'oldwire.generated.png'):
-            if not (source / r['key'] / name).is_file():
-                raise FileNotFoundError(source / r['key'] / name)
-    out.mkdir(parents=True, exist_ok=False)
-    selected = []
-    for task in sorted({r['task'] for r in rows}):
-        r = next(r for r in rows if r['task'] == task)
-        folder = out / r['key']
-        folder.mkdir()
-        src = source / r['key']
-        # RGB A/B is an existing held-out pilot, NOT the 2500-episode training cache.
-        candidates = [('rgb.generated.png', 'rgb_corrected'),
-                      ('oldwire.generated.png', 'oldwire'),
-                      ('gt_rgb.png', 'gt_control'), ('input_rgb.png', 'input_copy_control')]
-        random.Random(r['generation_seed']).shuffle(candidates)
-        c = {k: r[k] for k in ('key', 'task', 'prompt', 'phase_text', 'goal_policy', 'target_frame',
-                               'generation_seed', 'split', 'phase')}
-        c['candidates'] = []
-        for name in ('input_rgb.png', 'gt_rgb.png'):
-            shutil.copy2(src / name, folder / name)
-            c[name + '_sha256'] = sha(folder / name)
-        for i, (name, variant) in enumerate(candidates):
-            candidate_id = f'C{i+1}'
-            dest = folder / (candidate_id + '.png')
-            shutil.copy2(src / name, dest)
-            c['candidates'].append(dict(id=candidate_id, variant=variant,
-                                        path=dest.name, sha256=sha(dest)))
-        c['scope'] = 'heldout RGB pipeline pilot, not production training cache'
-        selected.append(c)
-    write(out / 'cases.json', selected)
-
-
 def schema(ids):
     properties = {'id': {'type': 'string', 'enum': ids},
                   'decision': {'type': 'string', 'enum': ['pass', 'reject', 'uncertain']},
@@ -105,6 +74,8 @@ def image_part(path):
 
 
 def run_case(root, case, max_output_tokens=10000):
+    if not MODEL:
+        raise ValueError('Set GOALWAM_VLM_MODEL before scoring')
     folder = root / case['key']
     clean_only = case.get('audit_protocol') == 'clean_gt_only_v2'
     if clean_only and case.get('split') != 'clean':
@@ -125,7 +96,7 @@ def run_case(root, case, max_output_tokens=10000):
         instructions = instructions.replace('Input copies that have not reached the GT stage must not pass.',
             'No initial observation is supplied. Do not infer unseen initial states or transitions. Judge the visible candidate against this stage GT.')
         instructions += '\nOnly generated CLEAN training goals are screened. No random evaluation images. Background preservation means consistency with GT. Do not penalize valid alternative arm poses, but reject impossible contact, deformation, wrong object color/identity or target.\n'
-    body = {'model': MODEL, 'reasoning': {'effort': 'max'}, 'store': False,
+    body = {'model': MODEL, 'reasoning': {'effort': EFFORT}, 'store': False,
             'instructions': instructions, 'input': [{'role': 'user', 'content': content}],
             'max_output_tokens': max_output_tokens,
             'text': {'format': {'type': 'json_schema', 'name': 'goal_audit', 'strict': True,
@@ -146,11 +117,11 @@ def run_case(root, case, max_output_tokens=10000):
     if previous.exists():
         previous.rename(folder/('response_previous_'+str(time.time_ns())+'.json'))
     write(folder / 'response.json', response)
-    if response.get('model') != MODEL or response.get('reasoning',{}).get('effort') != 'max':
+    if response.get('model') != MODEL or response.get('reasoning',{}).get('effort') != EFFORT:
         raise ValueError('Gateway returned a different model or effort; no silent fallback')
     score = json.loads(output_text(response))
     validate_score(score, ids)
-    scored = {'request_sha256': fingerprint, 'model_requested': MODEL, 'effort_requested': 'max',
+    scored = {'request_sha256': fingerprint, 'model_requested': MODEL, 'effort_requested': EFFORT,
               'model_returned': response.get('model'), 'reasoning_returned': response.get('reasoning'),
               'usage': response.get('usage'), 'transport': stats, 'score': score,
               'human_approved': False, 'scope': case['scope']}
@@ -173,30 +144,28 @@ def validate_score(score, ids):
 
 
 def report(root, cases):
-    receipts = [json.loads((root / c['key'] / 'score.json').read_text()) for c in cases]
+    receipts = [json.loads((root / c['key'] / 'score.json').read_text()) if (root / c['key'] / 'score.json').exists()
+                else dict(transport=dict(request_bytes=0, response_bytes=0), score=dict(candidates=[], ranking=[])) for c in cases]
     up = sum(r['transport']['request_bytes'] for r in receipts)
     down = sum(r['transport']['response_bytes'] for r in receipts)
     summary = dict(cases=len(cases), candidates=sum(len(c['candidates']) for c in cases),
-                   request_bytes=up, response_bytes=down,
-                   mac_application_bytes_approximately=2*(up+down),
-                   note='Counts each payload at SSH and VPN legs; excludes framing, encryption and retransmits.',
-                   projections_3691_slots=dict(six_image_requests_gib=2*(up+down)/len(cases)*3691/2**30),
-                   controls=[], policy_success_measured=False, production_cache_built=False)
+                   request_bytes=up, response_bytes=down, controls=[], policy_success_measured=False)
     for c, r in zip(cases, receipts):
         for s in r['score']['candidates']:
             variant = next(x['variant'] for x in c['candidates'] if x['id'] == s['id'])
             summary['controls'].append(dict(case=c['key'], variant=variant, **s))
     write(root / 'summary.json', summary)
-    # Self-contained private HTML; no CDNs, network requests or credentials.
+    # Local relative images load on demand; the full cache is not embedded in HTML.
     parts = ['<!doctype html><meta charset="utf-8"><title>Goal 图人工复查</title>',
       '<style>body{font:15px system-ui;margin:24px;background:#f7f8fa}section{background:white;padding:18px;margin-bottom:24px}.images{display:flex;gap:12px;flex-wrap:wrap}figure{width:230px;margin:0}img{width:230px}pre{white-space:pre-wrap}select{font-size:15px;padding:6px}</style>',
-      '<h1>VLM 筛选链路试运行</h1><p>4 个任务的 held-out RGB 对照，不是完整训练缓存。默认全部待人工复查；不会自动入库。</p>',
+      '<h1>训练目标图复查</h1><p>逐阶段比较生成目标与参考图，选择一个候选或拒绝全部。评分为可选辅助；导出决定后运行 export_cache.py。</p>',
       '<button onclick="save()">导出人工决定 JSON</button>']
     for c, r in zip(cases, receipts):
         parts += ['<section><h2>'+html.escape(c['key'])+'</h2><p>'+html.escape(c['phase_text'])+'</p><div class="images">']
         for label, name in [('INPUT', 'input_rgb.png'), ('GT', 'gt_rgb.png')] + [(x['id']+' '+x['variant'], x['path']) for x in c['candidates']]:
-            b64 = base64.b64encode((root/c['key']/name).read_bytes()).decode()
-            parts += ['<figure><figcaption>'+html.escape(label)+'</figcaption><img src="data:image/png;base64,'+b64+'"></figure>']
+            path = inside(root, str(Path(c['key']) / name))
+            url = quote(str(path.relative_to(root.resolve())))
+            parts += ['<figure><figcaption>'+html.escape(label)+'</figcaption><img loading="lazy" src="'+url+'"></figure>']
         parts += ['</div><pre>'+html.escape(json.dumps(r['score'],ensure_ascii=False,indent=2))+'</pre>',
                   '<select data-key="'+html.escape(c['key'],quote=True)+'"><option value="">待复查</option><option value="reject_all">全部拒绝</option>']
         for x in c['candidates']:
@@ -204,24 +173,26 @@ def report(root, cases):
                 parts += ['<option value="'+x['id']+'">选择 '+x['id']+' '+x['variant']+'</option>']
         parts += ['</select><p>若推翻自动筛选结论，请填写人工依据：</p><textarea data-reason="'+html.escape(c['key'],quote=True)+'" rows="2" style="width:90%"></textarea></section>']
     manifest_hash = sha(root/'cases.json')
-    parts += ['<script>function save(){const notes=[...document.querySelectorAll("textarea")];const decisions=[...document.querySelectorAll("select")].map(s=>({key:s.dataset.key,decision:s.value,override_reason:notes.find(n=>n.dataset.reason===s.dataset.key).value.trim()}));const b=new Blob([JSON.stringify({schema:"goalwam-human-review/v1",cases_sha256:"'+manifest_hash+'",scope:"pilot_only",decisions},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="human_decisions.json";a.click();}</script>']
+    parts += ['<script>function save(){const notes=[...document.querySelectorAll("textarea")];const decisions=[...document.querySelectorAll("select")].map(s=>({key:s.dataset.key,decision:s.value,override_reason:notes.find(n=>n.dataset.reason===s.dataset.key).value.trim()}));const b=new Blob([JSON.stringify({schema:"goalwam-human-review/v1",cases_sha256:"'+manifest_hash+'",scope:"training_goal_selection",decisions},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="human_decisions.json";a.click();}</script>']
     (root/'review.html').write_text('\n'.join(parts))
     return summary
 
 
 def main():
     p=argparse.ArgumentParser()
-    p.add_argument('mode', choices=['prepare','score','report'])
+    p.add_argument('mode', choices=['score','report'])
     p.add_argument('--root', type=Path, required=True)
-    p.add_argument('--source', type=Path)
     p.add_argument('--workers', type=int, default=2)
     p.add_argument('--max-output-tokens', type=int, default=10000)
     p.add_argument('--only', nargs='*')
     args=p.parse_args()
-    if args.mode=='prepare':
-        prepare(args.source,args.root)
-        return
-    cases=json.loads((args.root/'cases.json').read_text())
+    _contract, prepared = load_prepared(args.root)
+    cases = []
+    for case in prepared:
+        generated = json.loads((args.root / case['key'] / 'generated.json').read_text())
+        if generated['contract_sha256'] != sha(args.root / 'contract.json'):
+            raise ValueError('Generated case belongs to a different contract')
+        cases.append(generated['case'])
     if args.mode=='score':
         selected=[c for c in cases if not args.only or c['key'] in args.only]
         with ThreadPoolExecutor(max_workers=args.workers) as pool:

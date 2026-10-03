@@ -50,7 +50,7 @@ class ActionLayout:
 
     @property
     def head_eef_pos(self) -> slice | None:
-        # The 0803 layout appends head xyz+quaternion after the right EEF
+        # The 49D layout appends head xyz+quaternion after the right EEF
         # gripper. Legacy 41-D layouts end at the right EEF gripper.
         start = self.right_eef_quat.stop + 1
         return slice(start, start + 3) if self.eef.stop >= start + 7 else None

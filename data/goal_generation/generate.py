@@ -1,10 +1,10 @@
-"""Eight independent GPU workers; one pinned regular-weight model per GPU."""
+"""Generate prepared goals with one regular-weight model per selected GPU."""
 import json, os, subprocess, sys, time
 from pathlib import Path
 RELEASE=Path(__file__).resolve().parents[2]/'i2i/inference_runtime'
-OUT=Path(os.environ['VIGAR_GOAL_GENERATION_WORK'])
-CHECKPOINT=Path(os.environ['GOALWAM_I2I_CHECKPOINT'])
-from curate import sha,write
+OUT=Path(os.environ.get('VIGAR_GOAL_GENERATION_WORK', '/path/to/goal_generation'))
+CHECKPOINT=Path(os.environ.get('GOALWAM_I2I_CHECKPOINT', '/path/to/i2i_checkpoint'))
+from common import sha, write, load_prepared
 GPUS=os.environ.get('CURATION_GPU_LIST','0,1,2,3,4,5,6,7').split(',')
 
 def worker(rank):
@@ -17,13 +17,13 @@ def worker(rank):
     from evaluate_episode_image_edit_nano import _keep_eval_callbacks
     from robotwin_i2i_goal import generate_goal
     import torch.distributed as dist
-    contract=json.loads((OUT/'contract.json').read_text())
-    logical_checkpoint=str(CHECKPOINT)
+    contract, cases = load_prepared(OUT)
+    logical_checkpoint=str(CHECKPOINT.resolve())
     assert contract['split']=='clean' and contract['checkpoint']==logical_checkpoint
     assert sha(CHECKPOINT/'model/.metadata')==contract['checkpoint_metadata_sha256']
     contract_sha=sha(OUT/'contract.json')
     assert sha(OUT/'cases.json')==json.loads((OUT/'PREPARED.json').read_text())['cases_sha256']
-    cases=json.loads((OUT/'cases.json').read_text())[rank::len(GPUS)]
+    cases=cases[rank::len(GPUS)]
     with distributed_init():distributed.init()
     overrides=['job.project=vigar','job.group=clean_goal_curation',f'job.name=clean_curation_gpu{rank}',
        'job.wandb_mode=disabled',f'checkpoint.load_path={CHECKPOINT}','checkpoint.load_training_state=false',
@@ -38,7 +38,7 @@ def worker(rank):
     with model_init():model=instantiate(config.model)
     model=model.to('cuda',memory_format=config.trainer.memory_format)
     model.on_train_start(config.trainer.memory_format);trainer.checkpointer.load(model)
-    trainer.callbacks.on_train_start(model,iteration=10000);model.eval()
+    trainer.callbacks.on_train_start(model,iteration=0);model.eval()
     print('CLEAN_MODEL_READY',rank,str(CHECKPOINT),flush=True)
     try:
         for case in cases:
@@ -70,8 +70,10 @@ def worker(rank):
         trainer.checkpointer.finalize();dist.destroy_process_group()
 
 def main():
+    if '--help' in sys.argv:
+        print('Usage: generate.py; set VIGAR_GOAL_GENERATION_WORK, GOALWAM_I2I_CHECKPOINT and CURATION_GPU_LIST. Run prepare.py first.'); return
     if len(sys.argv)>1:worker(int(sys.argv[1]));return
-    while not (OUT/'PREPARED.json').exists():time.sleep(30)
+    contract, cases = load_prepared(OUT)
     (OUT/'logs').mkdir(exist_ok=True)
     processes=[];logs=[]
     for i,gpu in enumerate(GPUS):
@@ -84,6 +86,6 @@ def main():
     codes=[p.wait() for p in processes]
     for log in logs:log.close()
     if any(codes):write(OUT/'GENERATION_FAILED.json',dict(codes=codes));raise SystemExit(1)
-    write(OUT/'GENERATION_COMPLETE.json',dict(slots=3691,candidates=14764,split='clean'))
+    write(OUT/'GENERATION_COMPLETE.json',dict(slots=len(cases), candidates=sum(len(c['candidates']) for c in cases), split=contract['split'], contract_sha256=sha(OUT/'contract.json')))
 
 if __name__=='__main__':main()

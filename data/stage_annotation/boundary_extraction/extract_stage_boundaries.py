@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay official RoboTwin trajectories and emit v6 stage boundary frames.
+"""Replay official RoboTwin trajectories and emit stage boundary frames.
 
 The source HDF5/video files are never copied.  Episode ``i`` is reconstructed
 with ``seed.txt[i]`` and ``_traj_data/episode{i}.pkl``; the resulting boundary
@@ -24,22 +24,25 @@ import yaml
 sys.path.append("./")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "policy"))
 
-from envs import CONFIGS_PATH
+
 
 from cosmos_policy.stage_success import (
+    CONFIG_SHA256,
     STAGE_CONTRACT_VERSION,
     SUBGOAL_TASKS,
     stage_count_for_task,
     stage_texts_for_task,
     task_stage_success,
 )
+from task_config import require_config
+
 from cosmos_policy.subtask_oracle import ExpertSubtaskCapture
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw-root", type=Path, required=True)
-    parser.add_argument("--task-config", type=Path, required=True)
+    parser.add_argument("--sim-config", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--task", action="append", dest="tasks")
     parser.add_argument("--episode-start", type=int, default=0)
@@ -50,7 +53,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help=(
             "accept an official-clean episode whose action replay reaches every "
-            "internal v6 stage and preserves the exact recorded frame count but "
+            "internal stage and preserves the exact recorded frame count but "
             "misses terminal check_success because of physics replay drift"
         ),
     )
@@ -69,6 +72,7 @@ def _embodiment_config(robot_file: str) -> dict[str, Any]:
 
 
 def _load_base_config(path: Path) -> dict[str, Any]:
+    from envs import CONFIGS_PATH
     with path.open(encoding="utf-8") as stream:
         args = yaml.load(stream.read(), Loader=yaml.FullLoader)
     with open(
@@ -77,7 +81,7 @@ def _load_base_config(path: Path) -> dict[str, Any]:
         embodiments = yaml.load(stream.read(), Loader=yaml.FullLoader)
     selected = args["embodiment"]
     if len(selected) != 1:
-        raise ValueError("v6 extraction currently requires one dual-arm embodiment")
+        raise ValueError("extraction currently requires one dual-arm embodiment")
     robot_file = embodiments[selected[0]]["file_path"]
     args["left_robot_file"] = robot_file
     args["right_robot_file"] = robot_file
@@ -116,6 +120,7 @@ def _read_existing(path: Path) -> set[tuple[str, int]]:
             if not line.strip():
                 continue
             row = json.loads(line)
+            require_config(row)
             key = (str(row["task"]), int(row["local_episode_index"]))
             if key in result:
                 raise ValueError(f"duplicate existing boundary record {key}")
@@ -201,7 +206,7 @@ def _extract_episode(
                     "recorded expert replay did not reach official success"
                 )
             print(
-                f"[v6-boundary] WARNING task={task_name} episode={local_index} "
+                f"[stage-boundary] WARNING task={task_name} episode={local_index} "
                 "uses the official recorded HDF5 terminal frame because exact-length "
                 "action replay drifted after all internal stages",
                 flush=True,
@@ -236,6 +241,7 @@ def _extract_episode(
             previous = end_frame
         return {
             "contract_version": STAGE_CONTRACT_VERSION,
+            "task_config_sha256": CONFIG_SHA256,
             "task": task_name,
             "local_episode_index": local_index,
             "seed": int(seed),
@@ -264,7 +270,7 @@ def main() -> int:
     tasks = sorted(set(args.tasks or SUBGOAL_TASKS))
     unknown = sorted(set(tasks) - SUBGOAL_TASKS)
     if unknown:
-        raise ValueError(f"tasks have no v6 contract: {unknown}")
+        raise ValueError(f"tasks have no contract: {unknown}")
     if not 0 <= args.episode_start < args.episode_end <= 50:
         raise ValueError("episode range must satisfy 0 <= start < end <= 50")
     existing = _read_existing(args.output) if args.resume else set()
@@ -273,7 +279,7 @@ def main() -> int:
             f"output already exists; pass --resume to append missing rows: {args.output}"
         )
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    base_args = _load_base_config(args.task_config)
+    base_args = _load_base_config(args.sim_config)
     completed = 0
     for task_name in tasks:
         source = _source_dir(args.raw_root, task_name)
@@ -297,7 +303,7 @@ def main() -> int:
                 )
             except Exception as exc:
                 print(
-                    f"[v6-boundary] failed task={task_name} episode={local_index} "
+                    f"[stage-boundary] failed task={task_name} episode={local_index} "
                     f"seed={seeds[local_index]} error={exc}",
                     flush=True,
                 )
@@ -309,7 +315,7 @@ def main() -> int:
                 os.fsync(stream.fileno())
             completed += 1
             print(
-                f"[v6-boundary] complete task={task_name} episode={local_index} "
+                f"[stage-boundary] complete task={task_name} episode={local_index} "
                 f"seed={seeds[local_index]} stages={row['stage_count']} "
                 f"frames={row['frame_count']}",
                 flush=True,
@@ -318,6 +324,7 @@ def main() -> int:
         json.dumps(
             {
                 "contract_version": STAGE_CONTRACT_VERSION,
+                "task_config_sha256": CONFIG_SHA256,
                 "new_records": completed,
                 "output": str(args.output),
             },
@@ -329,7 +336,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    from test_render import Sapien_TEST
-
-    Sapien_TEST()
     raise SystemExit(main())

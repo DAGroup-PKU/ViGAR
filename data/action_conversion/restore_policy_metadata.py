@@ -3,7 +3,7 @@ import concurrent.futures,hashlib,json,os
 from pathlib import Path
 import h5py,numpy as np,pyarrow.parquet as pq
 from reference.geometry import world_pose_to_canonical,ACTION_MASK,STATE_MASK
-DATA=Path(os.environ['VIGAR_DATASET_V7'])
+DATA=Path(os.environ['VIGAR_ANNOTATED_DATASET'])
 OUT=Path(os.environ['VIGAR_DATASET49_WORK'])
 def sha(x):return hashlib.sha256(np.ascontiguousarray(x).tobytes()).hexdigest()
 def main():
