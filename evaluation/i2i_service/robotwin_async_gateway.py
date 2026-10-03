@@ -40,7 +40,7 @@ class Gateway:
         self.episode_seed = 0
         self.policy_contract = self.policy.call({"cmd": "ping"})
         if self.policy_contract.get("subtask_text_conditioning", True):
-            raise ValueError("Expected the v7 global-task-text executor, not oracle subtask text")
+            raise ValueError("Expected an executor conditioned on task-level text; subtask text conditioning must be disabled")
 
     def __call__(self, request):
         with self.lock:

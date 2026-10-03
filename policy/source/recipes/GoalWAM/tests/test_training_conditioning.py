@@ -14,7 +14,7 @@ from omegaconf import OmegaConf
 from torch.utils.data import DataLoader, Dataset
 
 from recipes.GoalWAM.data.data_loader import CaptionDropoutDataset, StatefulWindowLoader, WindowSampler
-from recipes.GoalWAM.data.dataset import LeRobot0824SFTDataset
+from recipes.GoalWAM.data.dataset import LeRobotPolicySFTDataset
 from recipes.GoalWAM.tests.test_checkpoint_bundle import make_bundle
 from recipes.GoalWAM.trainer import goalwam_trainer
 from recipes.GoalWAM.trainer.arguments import GoalWAMDataArguments, VeOmniGoalWAMArguments
@@ -40,7 +40,7 @@ def test_training_dropout_retains_goal_state_and_eval_caption(monkeypatch, text_
         assert kwargs["text_conditioning"] == text_conditioning
         return raw
 
-    monkeypatch.setattr(goalwam_trainer, "LeRobot0824Dataset", build_raw)
+    monkeypatch.setattr(goalwam_trainer, "LeRobotPolicyDataset", build_raw)
     trainer = object.__new__(goalwam_trainer.GoalWAMTrainer)
     trainer.args = SimpleNamespace(
         data=GoalWAMDataArguments(
@@ -164,7 +164,7 @@ def test_invalid_caption_dropout(rate):
     with pytest.raises(ValueError, match="caption_dropout_rate"):
         GoalWAMDataArguments(train_path="manifest.yaml", caption_dropout_rate=rate)
     with pytest.raises(ValueError, match="cfg_dropout_rate"):
-        LeRobot0824SFTDataset(None, cfg_dropout_rate=rate)
+        LeRobotPolicySFTDataset(None, cfg_dropout_rate=rate)
 
 
 @pytest.mark.parametrize("maintained", [False, True])

@@ -1,4 +1,4 @@
-"""Deterministic, resumable sample loading for the 0824 recipe."""
+"""Deterministic, resumable sample loading for the 49D recipe."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Reproducibility artifacts and offline evaluation for the current 0824 contract.
+"""Reproducibility artifacts and offline evaluation for the current 49D contract.
 
 All model computation uses native Cosmos methods. These helpers observe tensors,
 save/load native DCP states, and evaluate recorded data; they contain no alternate
@@ -460,7 +460,7 @@ def evaluate(
     rows = []
     iterator = None
     with evaluation_state(model):
-        scope = model.ema_scope(context="0824_eval", is_cpu=True) if weights == "ema" else nullcontext()
+        scope = model.ema_scope(context="policy_eval", is_cpu=True) if weights == "ema" else nullcontext()
         with scope:
             try:
                 iterator = iter(loader)

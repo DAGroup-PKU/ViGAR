@@ -1,4 +1,4 @@
-"""Physical 0824 action metrics used by GoalWAM evaluation."""
+"""Physical 49D action metrics used by GoalWAM evaluation."""
 
 from typing import Dict
 

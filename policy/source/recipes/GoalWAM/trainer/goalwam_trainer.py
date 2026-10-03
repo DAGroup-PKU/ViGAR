@@ -24,7 +24,7 @@ from veomni.trainer.callbacks.trace_callback import WandbTraceCallback
 
 from ..data.data_collator import collate_samples
 from ..data.data_loader import StatefulWindowLoader
-from ..data.dataset import LeRobot0824Dataset, LeRobot0824SFTDataset
+from ..data.dataset import LeRobotPolicyDataset, LeRobotPolicySFTDataset
 from .callbacks import UpdateAudit
 from .checkpoint_bundle import copy_assets, finish_bundle, read_bundle, save_portable_config
 from .evaluator import (
@@ -132,10 +132,10 @@ class GoalWAMTrainer(BaseTrainer):
         self.model_assets = [self.model_config, self.tokenizer]
 
     def _build_data_transform(self):
-        self.data_transform = LeRobot0824SFTDataset
+        self.data_transform = LeRobotPolicySFTDataset
 
     def _dataset(self, path, split, names=None, *, training=False):
-        raw = LeRobot0824Dataset(
+        raw = LeRobotPolicyDataset(
             path,
             self.args.data.norm_stat_files,
             split=split,
@@ -159,7 +159,7 @@ class GoalWAMTrainer(BaseTrainer):
             text_conditioning=self.args.data.text_conditioning,
             parquet_cache_dir=self.args.data.parquet_cache_dir,
         )
-        return LeRobot0824SFTDataset(
+        return LeRobotPolicySFTDataset(
             raw,
             tokenizer_config=self.native_config.model.config.vlm_config.tokenizer,
             cfg_dropout_rate=self.args.data.caption_dropout_rate if training else 0.0,

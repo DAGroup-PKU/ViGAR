@@ -149,10 +149,10 @@ def processor():
 def test_online_inputs_match_dataset_with_no_future_labels(processor):
     import torch
 
-    from recipes.GoalWAM.data.dataset import LeRobot0824Dataset
+    from recipes.GoalWAM.data.dataset import LeRobotPolicyDataset
 
     config = processor.data
-    dataset = LeRobot0824Dataset(
+    dataset = LeRobotPolicyDataset(
         {key: str(ROOT / value) for key, value in config["eval_path"].items()},
         {key: str(ROOT / value) for key, value in config["norm_stat_files"].items()},
         norm_type=config["norm_type"],

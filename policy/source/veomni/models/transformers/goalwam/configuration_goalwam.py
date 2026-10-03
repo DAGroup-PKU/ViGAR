@@ -1,4 +1,4 @@
-"""Serializable native configuration and the fixed 0824 data contract."""
+"""Serializable native configuration and the fixed 49D data contract."""
 
 import copy
 

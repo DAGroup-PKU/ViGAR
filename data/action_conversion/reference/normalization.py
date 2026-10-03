@@ -1,4 +1,4 @@
-"""0824 normalization primitives, retained with unchanged numerical behavior."""
+"""49D normalization primitives, retained with unchanged numerical behavior."""
 
 import re
 from typing import Dict

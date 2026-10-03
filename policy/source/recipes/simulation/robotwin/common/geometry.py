@@ -1,4 +1,4 @@
-"""RoboTwin world/tool poses <-> 0824 camera-NWU/Astribot-tool representation.
+"""RoboTwin world/tool poses <-> 49D camera-NWU/Astribot-tool representation.
 
 Only NumPy/SciPy are required, so this bridge also works with other policies.
 RoboTwin get_arm_pose returns SAPIEN WORLD poses, not get_*_orig_endpose (base).

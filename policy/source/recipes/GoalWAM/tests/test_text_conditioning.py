@@ -12,7 +12,7 @@ import torch
 import yaml
 
 from recipes.GoalWAM.data.data_loader import StatefulWindowLoader
-from recipes.GoalWAM.data.dataset import LeRobot0824Dataset, LeRobot0824SFTDataset
+from recipes.GoalWAM.data.dataset import LeRobotPolicyDataset, LeRobotPolicySFTDataset
 from recipes.GoalWAM.data.text_conditioning import segment_text_intervals, select_text
 from recipes.GoalWAM.tests.test_goal_sampling import only, segment
 from recipes.GoalWAM.tests.test_tail_windows import population
@@ -36,7 +36,7 @@ def annotated_population(tmp_path, *, rate=1):
 
 
 def configured(base, tmp_path, mode="episode", *, training=True, tails=True):
-    raw = LeRobot0824Dataset(
+    raw = LeRobotPolicyDataset(
         base.manifest,
         {"robotwin_aloha_agilex": str(tmp_path / "norm.json")},
         training=training,
@@ -117,7 +117,7 @@ def test_text_resume_contract_includes_captions_timing_and_mode(tmp_path):
     raw.random_goal_sampling = False
 
     def loader():
-        return StatefulWindowLoader(LeRobot0824SFTDataset(raw))
+        return StatefulWindowLoader(LeRobotPolicySFTDataset(raw))
 
     saved = loader().state_dict()
     assert "text_conditioning" in saved and "tail_windows" not in saved and "goal_sampling" not in saved

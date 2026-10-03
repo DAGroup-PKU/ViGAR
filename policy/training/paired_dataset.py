@@ -10,7 +10,7 @@ from color_jitter import augment_sample, CONFIG as JITTER_CONFIG
 import torch.nn.functional as F
 from PIL import Image
 
-from recipes.GoalWAM.data.dataset import LeRobot0824Dataset
+from recipes.GoalWAM.data.dataset import LeRobotPolicyDataset
 from recipes.GoalWAM.data.images import compose_goal_image
 from lookahead_contract import policy_case
 
@@ -32,7 +32,7 @@ def goal_views(path, expected_hash):
     return {k: F.interpolate(v.float(), size=(240, 320), mode='bilinear', align_corners=False)
             .round().clamp(0, 255).byte() for k, v in tiles.items()}
 
-class PairedDataset(LeRobot0824Dataset):
+class PairedDataset(LeRobotPolicyDataset):
     def __init__(self, goal_mode):
         if goal_mode != 'multi_view':
             raise ValueError(goal_mode)

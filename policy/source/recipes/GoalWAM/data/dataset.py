@@ -1,6 +1,6 @@
-"""Read 0824 LeRobot v3 manifests without changing stored absolute actions.
+"""Read 49D LeRobot v3 manifests without changing stored absolute actions.
 
-Geometry and normalization use the recipe-local 0824 helpers.
+Geometry and normalization use the recipe-local 49D helpers.
 The physical reader is independent of Cosmos tokenization and GPU runtimes.
 """
 
@@ -244,7 +244,7 @@ class FrameReader:
         self.container.close()
 
 
-class LeRobot0824Dataset(Dataset):
+class LeRobotPolicyDataset(Dataset):
     """One current state, 48 commands, and a separate recorded visual goal.
 
     Optional tail windows retain every anchor, mask unavailable actions and use
@@ -286,7 +286,7 @@ class LeRobot0824Dataset(Dataset):
         if split not in {"train", "eval", "all"}:
             raise ValueError(f"Unknown split {split}")
         if horizon != 48 or video_stride != 4:
-            raise ValueError("GoalWAM 0824 contract requires horizon=48, video_stride=4")
+            raise ValueError("GoalWAM 49D contract requires horizon=48, video_stride=4")
         self.manifest, self.manifest_sha256, raw = load_manifests(manifest)
         self.split, self.seed = split, seed
         self.training = split == "train" if training is None else training
@@ -322,7 +322,7 @@ class LeRobot0824Dataset(Dataset):
         self.supervise_arm_head_torso = supervise_arm_head_torso
         self.layout = resolve_action_layout(action_layout or ACTION_LAYOUT)
         if self.layout != resolve_action_layout(ACTION_LAYOUT):
-            raise ValueError("GoalWAM consumes the canonical 0824 49-D action_layout")
+            raise ValueError("GoalWAM consumes the canonical 49-D action_layout")
         if state_arm_eef_coordinate not in {"head_camera", "base"}:
             raise ValueError("state_arm_eef_coordinate must be base or head_camera")
         self.state_arm_eef_coordinate = state_arm_eef_coordinate
@@ -886,7 +886,7 @@ class LeRobot0824Dataset(Dataset):
             self._parquet_cache.close()
 
 
-class LeRobot0824SFTDataset(Dataset):
+class LeRobotPolicySFTDataset(Dataset):
     def __init__(self, dataset, *, tokenizer_config=None, max_action_dim=64, cfg_dropout_rate=0.0):
         from cosmos_framework.data.vfm.action.transforms import ActionTransformPipeline
 

@@ -1,4 +1,4 @@
-"""Geometry, sparse validity and normalization checks for the 0824 adapter."""
+"""Geometry, sparse validity and normalization checks for the 49D adapter."""
 
 import json
 

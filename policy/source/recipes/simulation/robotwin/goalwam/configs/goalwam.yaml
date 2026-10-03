@@ -60,7 +60,7 @@ episodes: 1  # Per task: 1 = 50 total episodes; 10 = 500 total episodes
 start_seed: 100000
 max_seed_attempts: 100
 instruction_type: unseen  # Official offline task-description templates
-# Keep head-camera EEF state conditioning through the 0824 adapter. qpos executes
+# Keep head-camera EEF state conditioning through the 49D adapter. qpos executes
 # predicted joint deltas reconstructed against the measured joints, plus grippers.
 action_type: qpos  # Official joint control; requires supervised joint outputs
 replan_steps: 32  # Predict 48, execute 32, then condition on a new measured anchor

@@ -5,7 +5,7 @@ import json
 import pytest
 import torch
 
-from recipes.GoalWAM.data.dataset import LeRobot0824Dataset
+from recipes.GoalWAM.data.dataset import LeRobotPolicyDataset
 from recipes.GoalWAM.data.images import CAMERA_KEYS, camera_layout, compose_goal_image
 from recipes.GoalWAM.tests.test_goal_sampling import dataset
 from recipes.GoalWAM.trainer.arguments import GoalWAMDataArguments
@@ -68,7 +68,7 @@ def test_legacy_resize_profile_composes_multi_view_goal():
 
 
 def rebuild(raw, tmp_path, mode="multi_view"):
-    result = LeRobot0824Dataset(
+    result = LeRobotPolicyDataset(
         raw.manifest,
         {"robotwin_aloha_agilex": str(tmp_path / "norm.json")},
         training=True,

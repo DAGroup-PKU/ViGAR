@@ -9,7 +9,7 @@ import pyarrow.parquet as pq
 import pytest
 import yaml
 
-from recipes.GoalWAM.data.dataset import LeRobot0824Dataset, load_manifests, manifest_paths
+from recipes.GoalWAM.data.dataset import LeRobotPolicyDataset, load_manifests, manifest_paths
 from recipes.GoalWAM.tests.test_checkpoint_bundle import make_bundle
 from recipes.GoalWAM.trainer.arguments import VeOmniGoalWAMArguments
 from veomni.arguments.parser import _add_arguments_recursive, _instantiate_recursive
@@ -122,15 +122,15 @@ def write_population(tmp_path):
 def test_all_episodes_by_default_and_weights_independent_of_holdout(tmp_path):
     manifest, norms = write_population(tmp_path)
     manifests = {"robot": str(manifest)}
-    training = LeRobot0824Dataset(manifests, norms, training=True)
-    evaluation = LeRobot0824Dataset(manifests, norms, training=False)
+    training = LeRobotPolicyDataset(manifests, norms, training=True)
+    evaluation = LeRobotPolicyDataset(manifests, norms, training=False)
     assert len(training.episodes) == len(evaluation.episodes) == 7
     assert {ep["metadata"]["episode_index"] for ep in training.episodes} == set(range(7))
     assert len(training) == 7 * 16 * 2 and len(evaluation) == 7 * 16
     assert all(ep["name"] == "robot/task" for ep in training.episodes)
     # Only explicit legacy holdout excludes five episodes, reproducibly.
-    legacy_train = LeRobot0824Dataset(manifest, norms, split="train")
-    legacy_eval = LeRobot0824Dataset(manifest, norms, split="eval")
+    legacy_train = LeRobotPolicyDataset(manifest, norms, split="train")
+    legacy_eval = LeRobotPolicyDataset(manifest, norms, split="eval")
     train_ids = {ep["metadata"]["episode_index"] for ep in legacy_train.episodes}
     eval_ids = {ep["metadata"]["episode_index"] for ep in legacy_eval.episodes}
     assert len(train_ids) == 2 and len(eval_ids) == 5 and not train_ids & eval_ids

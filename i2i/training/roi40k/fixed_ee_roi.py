@@ -19,7 +19,7 @@ def ee_point(pose, tcp_offset_m=0.12):
     """RoboTwin _trans_endpose: TCP = saved EE + R(wxyz) @ [.12,0,0].
 
     Explicitly set offset=0 for a dataset already storing TCP. This convention
-    was inspected in the stage-success-v7 simulator, not inferred from pixels.
+    is defined by RoboTwin _trans_endpose in world coordinates.
     """
     p = np.asarray(pose, dtype=np.float64)
     if p.shape != (7,) or not np.isfinite(p).all():

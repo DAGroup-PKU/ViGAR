@@ -11,7 +11,7 @@ import pyarrow.parquet as pq
 import pytest
 import torch
 
-from recipes.GoalWAM.data.dataset import LeRobot0824Dataset
+from recipes.GoalWAM.data.dataset import LeRobotPolicyDataset
 from recipes.GoalWAM.data.parquet_cache import ParquetEpisodeCache, cache_path, prepare_file
 
 
@@ -49,7 +49,7 @@ def make_parts(root, *, fixed=False):
 
 
 def reader(root, cache):
-    raw = object.__new__(LeRobot0824Dataset)
+    raw = object.__new__(LeRobotPolicyDataset)
     raw.entries = {
         "task": {"root": root, "info": {"data_path": "data/chunk-{chunk_index:03d}/file-{file_index:03d}.parquet"}}
     }

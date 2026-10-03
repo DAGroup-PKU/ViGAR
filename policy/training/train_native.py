@@ -24,7 +24,7 @@ def main():
     from cosmos_framework.utils import misc
     from cosmos_framework.utils.callback import CallBackGroup
     from cosmos_framework.inference.common.init import _init_log_console
-    from recipes.GoalWAM.data.dataset import LeRobot0824SFTDataset
+    from recipes.GoalWAM.data.dataset import LeRobotPolicySFTDataset
     from recipes.GoalWAM.data.data_loader import StatefulWindowLoader
     from recipes.GoalWAM.trainer.evaluator import save_checkpoint, seed_all, write_json
     from recipes.GoalWAM.trainer.callbacks import UpdateAudit
@@ -88,7 +88,7 @@ def main():
     optim, scheduler = core.init_optimizer_scheduler(cfg.optimizer, cfg.scheduler)
     scaler = torch.amp.GradScaler('cuda', enabled=False)
     raw = PairedDataset(a.goal_mode)
-    dataset = LeRobot0824SFTDataset(raw, tokenizer_config=cfg.model.config.vlm_config.tokenizer, cfg_dropout_rate=.1)
+    dataset = LeRobotPolicySFTDataset(raw, tokenizer_config=cfg.model.config.vlm_config.tokenizer, cfg_dropout_rate=.1)
     loader = StatefulWindowLoader(dataset, rank=rank, world_size=world, seed=42,
                                   batch_size=a.batch, num_workers=4, prefetch_factor=2)
     state = get_model_state_dict(core)

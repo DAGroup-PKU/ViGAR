@@ -15,7 +15,7 @@ from recipes.GoalWAM.data.dataset import (
     ACTION_LAYOUT,
     ROBOT_DOMAINS,
     ContractNormalizer,
-    LeRobot0824SFTDataset,
+    LeRobotPolicySFTDataset,
     validate_mask,
     validate_values,
 )
@@ -132,7 +132,7 @@ class ObservationProcessor:
         self.raw_config = SimpleNamespace(
             img_size=data["img_size"], resolution=data.get("resolution", "384x320"), normalizers={ROBOT: normalizer}
         )
-        self.sft = LeRobot0824SFTDataset(self.raw_config, tokenizer_config=tokenizer_config)
+        self.sft = LeRobotPolicySFTDataset(self.raw_config, tokenizer_config=tokenizer_config)
 
     def raw_sample(self, request):
         resolve_sampling(request.get("sampling"))

@@ -12,7 +12,7 @@ import pytest
 import torch
 
 from recipes.GoalWAM.data.data_loader import BucketWindowSampler, StatefulWindowLoader, collate_samples
-from recipes.GoalWAM.data.dataset import LeRobot0824Dataset, LeRobot0824SFTDataset
+from recipes.GoalWAM.data.dataset import LeRobotPolicyDataset, LeRobotPolicySFTDataset
 from recipes.GoalWAM.data.images import CAMERA_KEYS, compose_goal_image, letterbox
 from recipes.GoalWAM.data.resolution import assign_bucket, episode_resolution, validate_buckets
 from recipes.GoalWAM.tests.test_goal_sampling import GoalStreamDataset
@@ -43,7 +43,7 @@ def variable_dataset(tmp_path, mode="multi_view", cameras=None, buckets=BUCKETS)
         annotation["resolution"] = [h * 2, w * 2]
         row["annotation"] = json.dumps(annotation)
     pq.write_table(pa.Table.from_pylist(rows), episode_path)
-    raw = LeRobot0824Dataset(
+    raw = LeRobotPolicyDataset(
         base.manifest,
         {"robotwin_aloha_agilex": str(tmp_path / "norm.json")},
         img_size=[224, 288],
@@ -78,7 +78,7 @@ def synthetic_video(ep, camera, indices):
 )
 def test_all_episode_buckets_and_native_preparation(tmp_path, mode, cameras):
     raw = variable_dataset(tmp_path, mode, cameras)
-    sft = LeRobot0824SFTDataset(raw)
+    sft = LeRobotPolicySFTDataset(raw)
     for i, size in enumerate(BUCKETS):
         sample = raw[i * 64]
         expected_hw = size if cameras == ["head"] else CANVASES[i]
@@ -173,7 +173,7 @@ def test_variable_camera_dimensions_are_not_canonical_dimensions(tmp_path):
     camera = CAMERA_KEYS["head"]
     raw._readers[str(entry["root"] / camera)] = Reader()
     ep["metadata"].update({f"videos/{camera}/{key}": 0 for key in ("chunk_index", "file_index", "from_timestamp")})
-    frames = LeRobot0824Dataset._video(raw, ep, camera, [0, 1])
+    frames = LeRobotPolicyDataset._video(raw, ep, camera, [0, 1])
     assert frames.shape == (2, 24, 32, 3)
 
 
@@ -276,25 +276,25 @@ def test_prefetch_resume_and_goal_dropout_rng_independence():
 
 def test_resume_rejects_changed_buckets_population_and_batch_geometry(tmp_path):
     raw = variable_dataset(tmp_path)
-    loader = StatefulWindowLoader(LeRobot0824SFTDataset(raw), batch_size=2, accumulation_steps=3)
+    loader = StatefulWindowLoader(LeRobotPolicySFTDataset(raw), batch_size=2, accumulation_steps=3)
     state = loader.state_dict()
     for batch, accum in [(1, 3), (2, 2)]:
         with pytest.raises(ValueError, match="bucket sampling"):
             StatefulWindowLoader(
-                LeRobot0824SFTDataset(raw), batch_size=batch, accumulation_steps=accum
+                LeRobotPolicySFTDataset(raw), batch_size=batch, accumulation_steps=accum
             ).load_state_dict(state)
     raw.episodes[0]["source_hw"] = (512, 512)
     with pytest.raises(ValueError, match="bucket sampling"):
-        StatefulWindowLoader(LeRobot0824SFTDataset(raw), batch_size=2, accumulation_steps=3).load_state_dict(state)
+        StatefulWindowLoader(LeRobotPolicySFTDataset(raw), batch_size=2, accumulation_steps=3).load_state_dict(state)
     raw.img_size_buckets = ()
     with pytest.raises(ValueError, match="bucket sampling"):
-        StatefulWindowLoader(LeRobot0824SFTDataset(raw), batch_size=2, accumulation_steps=3).load_state_dict(state)
+        StatefulWindowLoader(LeRobotPolicySFTDataset(raw), batch_size=2, accumulation_steps=3).load_state_dict(state)
 
 
 def test_bucket_loader_delivers_native_batches_in_distributed_accumulation(tmp_path):
     raw = variable_dataset(tmp_path)
     loaders = [
-        StatefulWindowLoader(LeRobot0824SFTDataset(raw), rank=rank, world_size=2, batch_size=2, accumulation_steps=3)
+        StatefulWindowLoader(LeRobotPolicySFTDataset(raw), rank=rank, world_size=2, batch_size=2, accumulation_steps=3)
         for rank in range(2)
     ]
     iterators = [iter(loader) for loader in loaders]

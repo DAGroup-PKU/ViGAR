@@ -327,7 +327,7 @@
     },
     "job": {
       "project": "goalwam_migration",
-      "group": "robotwin_0824",
+      "group": "robotwin",
       "name": "veomni",
       "wandb_mode": "disabled"
     },

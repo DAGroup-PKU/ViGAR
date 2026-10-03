@@ -27,3 +27,9 @@ This upload does not claim a new 5000-episode score for the selected policy 50k 
 On 2026-10-03, the direct builder was compared with the previous two-step annotation builder and transform using a synthetic 50-task × 50-episode fixture, including nine single-bread episodes. All 2,500 episode annotations and 3,691 stage semantics matched after excluding version/provenance labels. The 50 task modes, retained stage texts and predicate descriptions also matched the prior final configuration. The comparison does not establish replay equivalence on real simulator trajectories.
 
 CPU integration tests materialize the direct annotated dataset and export/verify a complete synthetic goal cache. They check 19 multi-stage / 31 final-goal tasks, 950 boundary records, 74 task/stage definitions, variable bread stages, official RGB channel order, selection provenance, rejected selections and path containment. Model inference, VLM calls, GPU replay and training were not run for this refactor. The pretrained weights, fixed normalizer and paired evaluation instructions are unchanged.
+
+## Public naming cleanup
+
+The policy data entry points are `LeRobotPolicyDataset` and `LeRobotPolicySFTDataset`; repository imports, transform exports and tests use those names. Layout descriptions now refer to the canonical 49D representation, and old stage labels in comments/error messages and date-based experiment labels were removed. Fixed random seeds, serialized protocol versions, model parameters and the frozen normalizer are unchanged. External code importing the former dataset class names must update its imports.
+
+Validation: the 49-test release suite passed, as did 17 additional CPU geometry, action-mask and Parquet-cache tests. Both renamed classes and the transform export imported successfully. GPU training and simulator replay were not rerun for this naming change.

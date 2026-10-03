@@ -1,4 +1,4 @@
-"""Verify the online state/control bridge against original HDF5 and 0824 parquet."""
+"""Verify the online state/control bridge against original HDF5 and 49D parquet."""
 
 import argparse
 import io

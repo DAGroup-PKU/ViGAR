@@ -13,5 +13,5 @@ deferred-construction boundary so the VeOmni trainer controls sharding.
 The native trainer module is retained because native configuration types import
 it. VeOmni never instantiates it or delegates its update loop to it. Legacy robot
 datasets, deployment/simulator code, checkpoints and machine environments are
-excluded. The recipe owns the 0824 geometry/normalization helpers extracted from
+excluded. The recipe owns the 49D geometry/normalization helpers extracted from
 Qwen3-PI; it does not import that policy.

@@ -14,7 +14,7 @@ from cosmos_framework.data.vfm.action.transforms import build_sequence_plan_from
 from cosmos_framework.model.vfm.algorithm.loss.flow_matching import compute_flow_matching_loss
 
 from recipes.GoalWAM.data.data_loader import StatefulWindowLoader, collate_samples
-from recipes.GoalWAM.data.dataset import LeRobot0824Dataset, LeRobot0824SFTDataset
+from recipes.GoalWAM.data.dataset import LeRobotPolicyDataset, LeRobotPolicySFTDataset
 from recipes.GoalWAM.tests.test_manifests import write_population
 from recipes.GoalWAM.trainer.evaluator import inference_sample
 from recipes.GoalWAM.trainer.metrics import image_metrics
@@ -32,7 +32,7 @@ def population(tmp_path, *, rate=1, start=0, end=64, tails=True):
         annotation.update(effective_start_time=start / 30, effective_end_time=end / 30)
         episode["annotation"] = json.dumps(annotation)
     pq.write_table(pa.Table.from_pylist(episodes), path)
-    raw = LeRobot0824Dataset(manifest, norms, training=True, include_tail_windows=tails, img_size=[32, 32])
+    raw = LeRobotPolicyDataset(manifest, norms, training=True, include_tail_windows=tails, img_size=[32, 32])
     state = torch.zeros(64, 49)
     state[:, [32, 40, 48]] = 1
     state[:, 0] = torch.arange(64) / 100
@@ -80,12 +80,12 @@ def test_every_effective_anchor_and_no_fabricated_targets(tmp_path, rate, start,
 
 def test_full_windows_unchanged_and_partial_frames_never_reach_vae(tmp_path):
     raw, _ = population(tmp_path)
-    old = LeRobot0824Dataset(raw.manifest, {"robotwin_aloha_agilex": str(tmp_path / "norm.json")}, img_size=[32, 32])
+    old = LeRobotPolicyDataset(raw.manifest, {"robotwin_aloha_agilex": str(tmp_path / "norm.json")}, img_size=[32, 32])
     old._episode_rows, old._video = raw._episode_rows, raw._video
     for index in range(16):
         for key in ("action", "action_valid_mask", "video", "goal_frame"):
             torch.testing.assert_close(raw[index][key], old[index][key], rtol=0, atol=0)
-    sft = LeRobot0824SFTDataset(raw)
+    sft = LeRobotPolicySFTDataset(raw)
     samples = [sft[index] for index in (0, 16, 32, 48, 63)]
     assert [s["video"][-1].shape[1] for s in samples] == [13, 9, 5, 1, 1]
     for sample in samples:
@@ -103,7 +103,7 @@ def test_full_windows_unchanged_and_partial_frames_never_reach_vae(tmp_path):
 
 def test_native_loss_learns_last_command_and_ignores_padded_rows(tmp_path):
     raw, _ = population(tmp_path)
-    sample = LeRobot0824SFTDataset(raw)[63]
+    sample = LeRobotPolicySFTDataset(raw)[63]
     prediction = torch.ones_like(sample["action"], requires_grad=True)
     target = torch.zeros_like(prediction)
     valid = sample["action_valid_mask"]
@@ -145,10 +145,10 @@ def test_native_loss_learns_last_command_and_ignores_padded_rows(tmp_path):
 
 def test_resume_rejects_tail_contract_change_even_with_same_population_size(tmp_path):
     raw, _ = population(tmp_path)
-    loader = StatefulWindowLoader(LeRobot0824SFTDataset(raw))
+    loader = StatefulWindowLoader(LeRobotPolicySFTDataset(raw))
     state = loader.state_dict()
     state["cursor"] = 9
-    restored = StatefulWindowLoader(LeRobot0824SFTDataset(raw))
+    restored = StatefulWindowLoader(LeRobotPolicySFTDataset(raw))
     restored.load_state_dict(state)
     assert restored.sampler.cursor == 9
     missing = copy.deepcopy(state)
@@ -156,13 +156,13 @@ def test_resume_rejects_tail_contract_change_even_with_same_population_size(tmp_
     with pytest.raises(ValueError, match="Tail-window"):
         restored.load_state_dict(missing)
     raw.include_tail_windows = False
-    legacy = StatefulWindowLoader(LeRobot0824SFTDataset(raw))
+    legacy = StatefulWindowLoader(LeRobotPolicySFTDataset(raw))
     with pytest.raises(ValueError, match="Tail-window"):
         legacy.load_state_dict(state)
     raw.include_tail_windows = True
     raw.episodes[0]["end"] -= 1
     with pytest.raises(ValueError, match="Tail-window"):
-        StatefulWindowLoader(LeRobot0824SFTDataset(raw)).load_state_dict(state)
+        StatefulWindowLoader(LeRobotPolicySFTDataset(raw)).load_state_dict(state)
 
 
 @pytest.mark.parametrize("mode", ["inverse_dynamics", "forward_dynamics", "image2video"])

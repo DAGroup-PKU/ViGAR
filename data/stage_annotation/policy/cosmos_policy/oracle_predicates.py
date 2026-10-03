@@ -447,7 +447,7 @@ PredicateBuilder = Callable[[dict[str, list[dict[str, Any]]]], list[dict[str, An
 
 
 PREDICATE_BUILDERS: dict[str, PredicateBuilder] = {
-    # Registered v6 tasks are handled before fitted-state candidate generation.
+    # Registered stage-success tasks are handled before fitted-state candidate generation.
     "stage_success": _interaction_builder,
     "pick": _pick_builder,
     "place": _place_builder,

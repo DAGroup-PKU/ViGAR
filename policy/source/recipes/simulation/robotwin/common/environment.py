@@ -16,7 +16,7 @@ class UnstableScene(RuntimeError):
 def task_arguments(root, task, task_config):
     args = yaml.safe_load((root / "task_config" / f"{task_config}.yml").read_text())
     if args["embodiment"] != ["aloha-agilex"]:
-        raise ValueError("The current 0824 simulator bridge is for aloha-agilex")
+        raise ValueError("The current 49D simulator bridge is for aloha-agilex")
     robots = yaml.safe_load((root / "task_config/_embodiment_config.yml").read_text())
     robot_path = (root / robots["aloha-agilex"]["file_path"]).resolve()
     robot = yaml.safe_load((robot_path / "config.yml").read_text())

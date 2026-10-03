@@ -1,4 +1,4 @@
-"""Global <-> relative transforms for 0824 canonical action vectors.
+"""Global <-> relative transforms for canonical 49D action vectors.
 
 The policy is trained on actions expressed as *deltas* from the robot state
 at the current observation time t. Observation joints stay in their native
@@ -8,7 +8,7 @@ active recipe uses the latter for a cross-embodiment task-space input. The
 chassis portion of state is always zeroed because its absolute pose has no
 intrinsic meaning (it drifts and is frame-dependent).
 
-0824 49-D action layout (must match the 49-D dataset contract)::
+Canonical 49-D action layout (must match the 49-D dataset contract)::
 
     0-6   left arm joints        delta: action - state
     7     left gripper           absolute (unchanged)
@@ -51,7 +51,7 @@ from .action_layout import ActionLayout, resolve_action_layout
 
 
 # ---------------------------------------------------------------------------
-# Canonical 0824 layout constants.
+# Canonical 49D layout constants.
 # ---------------------------------------------------------------------------
 
 ACTION_DIM = 49
@@ -185,7 +185,7 @@ def check_anchor_head_quaternion(
         prefix = f"{context}: " if context else ""
         raise ValueError(
             f"{prefix}head EEF quaternion is marked valid but is not normalized "
-            f"(max |norm(q) - 1| = {worst:.3e} > {HEAD_QUAT_NORM_TOL:.1e}). The 0824 hand xyz "
+            f"(max |norm(q) - 1| = {worst:.3e} > {HEAD_QUAT_NORM_TOL:.1e}). The 49D hand xyz "
             "action target is rotated by this quaternion, so an identity head-camera pose must "
             "be stored as (0, 0, 0, 1); an all-zero group requires state_dim_mask[42:49] = false."
         )

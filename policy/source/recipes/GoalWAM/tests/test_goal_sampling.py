@@ -17,7 +17,7 @@ import yaml
 from torch.utils.data import Dataset
 
 from recipes.GoalWAM.data.data_loader import StatefulWindowLoader
-from recipes.GoalWAM.data.dataset import LeRobot0824Dataset, LeRobot0824SFTDataset
+from recipes.GoalWAM.data.dataset import LeRobotPolicyDataset, LeRobotPolicySFTDataset
 from recipes.GoalWAM.data.goal_sampling import (
     GoalSamplingConfig,
     episode_goal_timing,
@@ -44,7 +44,7 @@ def only(source, **kwargs):
 
 def dataset(tmp_path, config=None, *, training=True, tails=True):
     base, _ = population(tmp_path, tails=tails)
-    raw = LeRobot0824Dataset(
+    raw = LeRobotPolicyDataset(
         base.manifest,
         {"robotwin_aloha_agilex": str(tmp_path / "norm.json")},
         training=training,
@@ -143,7 +143,7 @@ def test_terminal_weights_match_legacy_samples_stream_and_resume(tmp_path, monke
 
     monkeypatch.setattr(text_tokenizer, "lazy_instantiate", lambda _: TinyTokenizer())
     actual = dataset(tmp_path, only("terminal"), tails=tails)
-    legacy = LeRobot0824Dataset(
+    legacy = LeRobotPolicyDataset(
         actual.manifest,
         {"robotwin_aloha_agilex": str(tmp_path / "norm.json")},
         training=True,
@@ -163,7 +163,7 @@ def test_terminal_weights_match_legacy_samples_stream_and_resume(tmp_path, monke
 
     loaders = [
         StatefulWindowLoader(
-            LeRobot0824SFTDataset(raw, tokenizer_config={}, cfg_dropout_rate=dropout),
+            LeRobotPolicySFTDataset(raw, tokenizer_config={}, cfg_dropout_rate=dropout),
             batch_size=2,
         )
         for raw in (actual, legacy)
@@ -307,7 +307,7 @@ def test_decoder_targets_and_inference_conditions(tmp_path):
         return video(ep, camera, indices)
 
     raw._video = read
-    sft = LeRobot0824SFTDataset(raw)
+    sft = LeRobotPolicySFTDataset(raw)
     for occurrence in range(20):
         key = (0, occurrence)
         sample = raw.physical_sample(key)
@@ -340,7 +340,7 @@ def test_dataset_accepts_null_optional_annotations_and_eval_stays_terminal(tmp_p
         annotation.update(segments=None, effective_start_time="", effective_end_time=None)
         ep["annotation"] = json.dumps(annotation)
     pq.write_table(pa.Table.from_pylist(episodes), path)
-    evaluated = LeRobot0824Dataset(
+    evaluated = LeRobotPolicyDataset(
         raw.manifest,
         {"robotwin_aloha_agilex": str(tmp_path / "norm.json")},
         training=False,
@@ -353,27 +353,27 @@ def test_dataset_accepts_null_optional_annotations_and_eval_stays_terminal(tmp_p
 
 def test_resume_contract_covers_annotations_without_tail_windows(tmp_path):
     raw = dataset(tmp_path, {"mode": "mixture"}, tails=False)
-    loader = StatefulWindowLoader(LeRobot0824SFTDataset(raw))
+    loader = StatefulWindowLoader(LeRobotPolicySFTDataset(raw))
     saved = loader.state_dict()
     assert "goal_sampling" in saved and "tail_windows" not in saved
     assert "goal_sampling" in raw.selection_record()
-    restored = StatefulWindowLoader(LeRobot0824SFTDataset(raw))
+    restored = StatefulWindowLoader(LeRobotPolicySFTDataset(raw))
     restored.load_state_dict(saved)
     manifest_digest = raw.manifest_sha256
     raw.manifest_sha256 = "changed-manifest"
     with pytest.raises(ValueError, match="Goal sampling changed"):
-        StatefulWindowLoader(LeRobot0824SFTDataset(raw)).load_state_dict(saved)
+        StatefulWindowLoader(LeRobotPolicySFTDataset(raw)).load_state_dict(saved)
     raw.manifest_sha256 = manifest_digest
     raw.episodes[0]["goal_endpoints"] = [60]
     with pytest.raises(ValueError, match="Goal sampling changed"):
-        StatefulWindowLoader(LeRobot0824SFTDataset(raw)).load_state_dict(saved)
+        StatefulWindowLoader(LeRobotPolicySFTDataset(raw)).load_state_dict(saved)
     raw.episodes[0]["goal_endpoints"] = []
     raw.goal_sampling.future.max_offset_seconds = 5.0
     with pytest.raises(ValueError, match="Goal sampling changed"):
-        StatefulWindowLoader(LeRobot0824SFTDataset(raw)).load_state_dict(saved)
+        StatefulWindowLoader(LeRobotPolicySFTDataset(raw)).load_state_dict(saved)
     raw.random_goal_sampling = False
     raw.goal_sampling = GoalSamplingConfig()
-    legacy = StatefulWindowLoader(LeRobot0824SFTDataset(raw))
+    legacy = StatefulWindowLoader(LeRobotPolicySFTDataset(raw))
     assert "goal_sampling" not in legacy.state_dict()
     assert "goal_sampling" not in raw.selection_record()
     legacy.load_state_dict(legacy.state_dict())
