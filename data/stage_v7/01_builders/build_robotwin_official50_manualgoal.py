@@ -30,11 +30,7 @@ SPLIT_SCHEMA_VERSION = "robotwin-semantic-split/v1"
 ANNOTATION_SCHEMA_VERSION = "robotwin-manual-subgoal-annotation/v2"
 GOAL_GRAPH_VERSION = "official50-clean50-stage-success-v6-22s28e/v2"
 
-POLICY_ROOT_CANDIDATES = (
-    Path(__file__).resolve().parent.parent
-    / "cosmos3_zy/scripts/robotwin_eval_adapter/policy",
-    Path(__file__).resolve().parent / "robotwin_eval_adapter/policy",
-)
+POLICY_ROOT_CANDIDATES = (Path(__file__).resolve().parents[1] / "policy",)
 for _policy_root in POLICY_ROOT_CANDIDATES:
     if (_policy_root / "cosmos_policy/stage_success.py").is_file():
         sys.path.insert(0, str(_policy_root))
@@ -52,24 +48,10 @@ from cosmos_policy.stage_success import (  # noqa: E402
     TASK_STAGE_TEXTS,
 )
 
-DEFAULT_BASE = Path(
-    "/path/to/vigar/assets"
-    "cosmos3zy_robotwin50_official_clean50_bsz128_meanstd_8gpu_"
-    "20260705_1805_p9027_lerobot_v3.0"
-)
-DEFAULT_RAW = Path(
-    "/path/to/vigar/assets"
-    "cosmos3zy_robotwin50_official_clean50_bsz128_meanstd_8gpu_"
-    "20260705_1805_p9027/raw_by_task"
-)
-DEFAULT_OUTPUT = Path(
-    "/path/to/vigar/assets"
-    "robotwin_official50_clean50_stagev6_fixedgoal_22s28e_lerobot_v3.0_v2"
-)
-DEFAULT_STAGE_BOUNDARIES = Path(
-    "/path/to/vigar/assets"
-    "official50_clean50_stage_boundaries_v6.jsonl"
-)
+DEFAULT_BASE = Path(os.environ.get("VIGAR_SOURCE_DATASET", "/path/to/source_lerobot_dataset"))
+DEFAULT_RAW = Path(os.environ.get("VIGAR_RAW_TRAJECTORIES", "/path/to/raw_by_task"))
+DEFAULT_OUTPUT = Path(os.environ.get("VIGAR_DATASET_V6", "/path/to/stage_v6"))
+DEFAULT_STAGE_BOUNDARIES = Path(os.environ.get("VIGAR_STAGE_BOUNDARIES", "/path/to/stage_boundaries_v6.jsonl"))
 
 MANUAL_STAGE_TEXT = {
     task_name: list(texts) for task_name, texts in TASK_STAGE_TEXTS.items()

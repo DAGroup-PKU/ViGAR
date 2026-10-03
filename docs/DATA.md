@@ -8,7 +8,7 @@ The selected policy uses 50 tasks, 2500 episodes and 3691 curated generated goal
 
 Normalization is fixed, with separate state/action statistics and `bounds_99_woclip`. The included normalizer SHA256 is `043abfe02703c23b944e23ee31c1d9465edd3bf8ddafa0518668f13d136c0617`. Its historical metadata is retained; do not silently regenerate it for another horizon or population.
 
-Stage-v7 boundary builders and task contracts are under `data/stage_v7`; supply source/output roots explicitly. Machine-specific runtime records, historical per-episode path maps and unrelated adapter tests have been removed.
+Stage-v7 boundary builders and task contracts are under `data/stage_v7`; supply source/output roots explicitly. Their shared offline predicate/capture helpers are packaged under `data/stage_v7/policy`, independently of the online policy. Machine-specific runtime records, historical per-episode path maps and unrelated adapter tests have been removed.
 
 ## I2I data
 

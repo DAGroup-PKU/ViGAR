@@ -26,14 +26,8 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
-DEFAULT_SOURCE = Path(
-    "/path/to/vigar/assets"
-    "robotwin_official50_clean50_stagev6_fixedgoal_22s28e_lerobot_v3.0_v2"
-)
-DEFAULT_OUTPUT = Path(
-    "/path/to/vigar/assets"
-    "robotwin_official50_clean50_stagev7_fixedgoal_19s31e_lerobot_v3.0_v1"
-)
+DEFAULT_SOURCE = Path(os.environ.get("VIGAR_DATASET_V6", "/path/to/stage_v6"))
+DEFAULT_OUTPUT = Path(os.environ.get("VIGAR_DATASET_V7", "/path/to/stage_v7"))
 
 EPISODE_GOAL_OVERRIDES = frozenset(
     {"open_microwave", "handover_block", "place_object_basket"}

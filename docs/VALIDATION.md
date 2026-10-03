@@ -2,7 +2,7 @@
 
 Public-source validation completed on 2026-10-03:
 
-- **42 CPU tests passed, none skipped**: look-ahead boundaries, shared image augmentation, ROI projection and4:1 gradients, RGB encoding, Strict Sync freshness, resumable seed queues, release binding and checksum-path safety.
+- **44 CPU tests passed, none skipped**: look-ahead boundaries, shared image augmentation, ROI projection and4:1 gradients, RGB encoding, Strict Sync freshness, resumable seed queues, release binding, checksum-path safety and standalone data-tool imports.
 - Python syntax, JSON/TOML parsing, shell syntax and repository-relative content hashes were checked.
 - The fixed normalizer and5000 paired seed/instruction entries retain their verified checksums.
 - Internal deployment paths, personal account defaults, private host addresses, source-machine manifests and prior private Git history are excluded. Common credential patterns are checked before publication.
