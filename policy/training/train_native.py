@@ -45,7 +45,8 @@ def main():
     rank, world = dist.get_rank(), dist.get_world_size()
     assert (world == 8 and a.batch == 1 and a.steps == 2) if a.preflight else (world == 16 and a.batch * world == 256)
     run_suffix = os.environ.get('POLICY8_RUN_SUFFIX', '')
-    out = ROOT / 'runs' / (('preflight_' if a.preflight else '') + a.goal_mode + run_suffix)
+    run_name = os.environ.get('POLICY8_RUN_NAME', 'robotwin_c2r')
+    out = ROOT / 'runs' / (('preflight_' if a.preflight else '') + run_name + run_suffix)
     out.mkdir(parents=True, exist_ok=True)
     _init_log_console()
     torch.backends.cuda.matmul.allow_tf32 = torch.backends.cudnn.allow_tf32 = False
@@ -74,7 +75,7 @@ def main():
     cfg.trainer.max_iter = a.steps
     cfg.job.project = 'vigar_robotwin'
     cfg.job.group = 'vigar_robotwin'
-    cfg.job.name = os.environ.get('WANDB_NAME', 'goalwam_skipping015_colorjitter50k') if not a.preflight else 'goalwam_policy_preflight'
+    cfg.job.name = os.environ.get('WANDB_NAME', 'robotwin_c2r') if not a.preflight else 'goalwam_policy_preflight'
     cfg.job.wandb_mode = 'online'
     cfg.job.path_local = str(out)
     signal = torch.tensor(float(rank), device='cuda')

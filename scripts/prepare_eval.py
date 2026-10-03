@@ -16,7 +16,7 @@ def build_plan(output, policy, planner, robotwin):
                 planner_release=str(REPO/'i2i/inference_runtime'),
                 i2i_vendor_dir=str(REPO/'evaluation/vendor_speedup_lru'),
                 paired_episode_file=str(REPO/'configs/paired_episodes.json'),
-                name='goalwam-policy-la015-cj50-i2i-roi70',
+                name='robotwin_c2r',
                 combination_evaluation_status='not_run_for_this_release',
                 seed_batch_size=5, simulators_per_model_pair=2,
                 goal_refresh_mode='sync_current', no_expert_goal=True, no_oracle_switch=True)
@@ -39,7 +39,7 @@ def main():
         if not path.exists(): raise FileNotFoundError(path)
     recipe=json.loads((a.policy/'recipe_config.json').read_text())
     if recipe['data'].get('lookahead_ratio') != .15 or not recipe['data'].get('photometric_augmentation'):
-        raise ValueError('Selected policy must carry 15% lookahead and ColorJitter')
+        raise ValueError('Selected policy must match the robotwin_c2r training contract')
     if a.planner.name != 'iter_000070000': raise ValueError('Selected planner directory must be iter_000070000; verify its provenance separately')
     paired=Path(plan['paired_episode_file'])
     if hashlib.sha256(paired.read_bytes()).hexdigest()!=plan['paired_manifest_sha256']:

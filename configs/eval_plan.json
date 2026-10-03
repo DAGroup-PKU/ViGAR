@@ -94,7 +94,7 @@
   "seed_queue_version": 1,
   "seed_batch_size": 5,
   "simulators_per_model_pair": 2,
-  "name": "vigar-robotwin",
+  "name": "robotwin_c2r",
   "task_dispatch": "seed_batch5_dual_sim",
   "speed_profile": "strict_sync_dual_sim",
   "lookahead_training_ratio": 0.15

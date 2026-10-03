@@ -10,13 +10,13 @@ This release contains the RoboTwin simulation pipeline and image-goal planner: d
 
 | Component | Configuration |
 |---|---|
-| Action policy | Three-view native 49D, 15% next-stage look-ahead, shared ColorJitter, selected 50k EMA |
-| I2I planner | Normal 30k initialization, end-effector 4:1 ROI training, random500 continuation to 70k; regular weights, no I2I skipping |
+| Action policy | `robotwin_c2r`: three-view native 49D, selected 50k EMA |
+| I2I planner | Normal 30k initialization, end-effector 4:1 ROI training, random500 continuation to 70k; regular weights |
 | Evaluation | Current-observation Strict Sync; 50 tasks × 2 splits × 50 episodes |
 | Policy sampling | UniPC 10 steps, guidance 1, shift 2; predict 48 / execute 32 |
 | I2I sampling | 35 steps, guidance 2.5, shift 5; RGB 384×320 |
 
-The release combines the selected skipping policy with the ROI70k planner. Results obtained with other planner checkpoints do not establish a score for this combination. See the [configuration](configs/selected_release.json) and [validation record](docs/VALIDATION.md).
+The release combines the `robotwin_c2r` policy with the ROI70k planner. Results obtained with other planner checkpoints do not establish a score for this combination. See the [configuration](configs/selected_release.json) and [validation record](docs/VALIDATION.md).
 
 ## Getting started
 

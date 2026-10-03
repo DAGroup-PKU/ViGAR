@@ -2,7 +2,7 @@
   "release_date": "2026-10-02",
   "repository": "DAGroup-PKU/ViGAR",
   "policy": {
-    "name": "native49_threeview_skipping015_colorjitter",
+    "name": "robotwin_c2r",
     "step": 50000,
     "weights": "ema",
     "lookahead_ratio": 0.15,
@@ -17,7 +17,7 @@
     "execution_prefix": 32,
     "normalization": "bounds_99_woclip",
     "normalizer_sha256": "043abfe02703c23b944e23ee31c1d9465edd3bf8ddafa0518668f13d136c0617",
-    "hub_path": "robotwin/skipping_colorjitter/iter_000050000"
+    "hub_path": "robotwin_c2r/iter_000050000"
   },
   "i2i": {
     "name": "normal30k_then_ee_roi40k_then_random500_to70k",
@@ -50,7 +50,7 @@
   "excluded": [
     "ablation experiments",
     "RoboCasa",
-    "native/skipping I2I100k",
+    "alternative I2I checkpoints",
     "model tensors",
     "videos and dataset shards",
     "credentials",

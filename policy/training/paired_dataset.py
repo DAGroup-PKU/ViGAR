@@ -1,4 +1,4 @@
-"""Selected three-view policy: 15% next-stage redirect and shared ColorJitter."""
+"""Dataset integration for the robotwin_c2r policy."""
 import hashlib
 import json
 import os

@@ -17,7 +17,7 @@ hf download DAGroup-PKU/ViGAR --local-dir /path/to/vigar-weights
 python scripts/verify_weights.py /path/to/vigar-weights
 ```
 
-The model repository contains native DCP shards and `.metadata`; downloading a subset of shards is insufficient. The policy folder is `robotwin/skipping_colorjitter/iter_000050000`; the planner folder is `i2i/roi/iter_000070000`.
+The model repository contains native DCP shards and `.metadata`; downloading a subset of shards is insufficient. The policy folder is `robotwin_c2r/iter_000050000`; the planner folder is `i2i/roi/iter_000070000`.
 
 Set `GOALWAM_POLICY_CHECKPOINT` and `GOALWAM_I2I_CHECKPOINT` accordingly. For inference, use the policy bundle's `vae/Wan2.2_VAE.pth` and `text_tokenizer` for `WAN_VAE_PATH` and `QWEN_TOKENIZER_PATH`. The planner checkpoint can be `BASE_CHECKPOINT_PATH` when serving it; training from the foundation model requires that model separately.
 
@@ -27,9 +27,9 @@ The policy retains EMA tensor names and serving dtypes; the I2I planner loads re
 
 Configure `.env` from `.env.example`. W&B credentials come from your environment or credential store; set your own entity/project. Launchers use existing GPUs and do not submit cloud jobs.
 
-Policy training uses 16 GPUs, microbatch 16, global batch 256 and 50k optimizer updates, saving every 4k and at the terminal update. It retains native Cosmos optimization, EMA, masks and geometry. ColorJitter strengths are brightness 0.3, contrast 0.4 and saturation 0.5; one parameter draw applies to all valid views, frames and goals within a sample, preserving padding.
+Policy training uses 16 GPUs, microbatch 16, global batch 256 and 50k optimizer updates, saving every 4k and at the terminal update. It retains native Cosmos optimization, EMA, masks and geometry. The complete training settings are recorded in `configs/selected_release.json`.
 
-Look-ahead redirects the last 15% of a non-final stage to the next stage's goal and text together; it does not drop input samples. I2I look-ahead remains disabled.
+The `robotwin_c2r` release preserves its original data-selection and image-processing settings. See the recorded configuration for exact values.
 
 The I2I lineage is normal training with selected 30k EMA, then 40k additional ROI updates with a fresh optimizer, then complete-state continuation on random500 to ROI step70k. The normal-stage wrapper stops at30k while preserving the original200k LR schedule. Head ROI windows are96×96, wrists48×48; target/background weight is4:1 with spatial-mean normalization. Source-image ROI is zero. Valid offscreen targets and explicitly allowed missing geometry retain global loss.
 

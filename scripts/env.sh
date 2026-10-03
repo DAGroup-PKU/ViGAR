@@ -17,6 +17,6 @@ export EPISODE_IMAGE_EDIT_LEROBOT_VIDEO_KEY=observation.images.cam_high
 export EPISODE_IMAGE_EDIT_THREE_CAMERA=true
 export EPISODE_IMAGE_EDIT_TARGET_MODE=segment_final
 export EPISODE_IMAGE_EDIT_SEGMENT_SOURCE=annotations
-# Only the action policy uses skipping in this release.
+# Preserve the released planner's target-selection setting.
 export EPISODE_IMAGE_EDIT_NEXT_SUBGOAL_TAIL_FRACTION=0
 export EPISODE_IMAGE_EDIT_REASONER_TARGET=false
