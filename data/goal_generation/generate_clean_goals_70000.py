@@ -25,7 +25,7 @@ def worker(rank):
     assert sha(OUT/'cases.json')==json.loads((OUT/'PREPARED.json').read_text())['cases_sha256']
     cases=json.loads((OUT/'cases.json').read_text())[rank::len(GPUS)]
     with distributed_init():distributed.init()
-    overrides=['job.project=robotwin_clean2rand','job.group=clean_goal_curation',f'job.name=clean_curation_gpu{rank}',
+    overrides=['job.project=vigar','job.group=clean_goal_curation',f'job.name=clean_curation_gpu{rank}',
        'job.wandb_mode=disabled',f'checkpoint.load_path={CHECKPOINT}','checkpoint.load_training_state=false',
        'checkpoint.only_load_scheduler_state=false','checkpoint.keys_to_skip_loading=[]',
        'checkpoint.dcp_async_mode_enabled=false','checkpoint.load_ema_to_reg=false',

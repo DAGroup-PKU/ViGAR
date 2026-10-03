@@ -73,9 +73,7 @@ def synthetic_video(ep, camera, indices):
     "mode,cameras",
     [
         ("multi_view", ["head", "left", "right"]),
-        ("head_only", ["head", "left", "right"]),
         ("multi_view", ["head"]),
-        ("head_only", ["head"]),
     ],
 )
 def test_all_episode_buckets_and_native_preparation(tmp_path, mode, cameras):
@@ -95,9 +93,6 @@ def test_all_episode_buckets_and_native_preparation(tmp_path, mode, cameras):
                 .eq({"head": 50, "left": 100, "right": 200}[name])
                 .all()
             )
-            if mode == "head_only" and name != "head":
-                assert not sample["goal_frame"][..., y : y + h, x : x + w].any()
-                assert not sample["goal_pixel_mask"][y : y + h, x : x + w].any()
         prepared = sft[i * 64]
         assert prepared["image_size"].tolist() == [*expected_hw, *expected_hw]
         assert prepared["sequence_plan"].vision_item_roles == ["goal", "default"]
@@ -115,15 +110,14 @@ def test_all_episode_buckets_and_native_preparation(tmp_path, mode, cameras):
         collate_samples([sft[0], bad])
 
 
-def test_head_only_camera_uses_exact_bucket_and_letterbox():
+def test_single_head_camera_uses_exact_bucket_and_letterbox():
     images = {"head": torch.full((1, 3, 240, 320), 101, dtype=torch.uint8)}
     assert assign_bucket((240, 320), BUCKETS) == (1, (224, 288))
     for size in BUCKETS:
-        for mode in ("multi_view", "head_only"):
-            actual, mask, boxes = compose_goal_image(images, size, ["head"], mode)
-            expected, expected_mask = letterbox(images["head"], size)
-            assert torch.equal(actual, expected) and torch.equal(mask, expected_mask)
-            assert set(boxes) == {"head"}
+        actual, mask, boxes = compose_goal_image(images, size, ["head"])
+        expected, expected_mask = letterbox(images["head"], size)
+        assert torch.equal(actual, expected) and torch.equal(mask, expected_mask)
+        assert set(boxes) == {"head"}
     assert assign_bucket((200, 200), [(128, 256), (256, 128)]) == (0, (128, 256))
 
 

@@ -69,14 +69,12 @@
   },
   "no_expert_goal": true,
   "no_oracle_switch": true,
-  "pilot_required": true,
-  "pilot_is_not_benchmark": true,
   "goal_refresh_mode": "sync_current",
   "node_base_ports": {
     "0": 29400,
     "1": 29400
   },
-  "lru8_slots": {
+  "pair_slots": {
     "0": [
       0,
       1,

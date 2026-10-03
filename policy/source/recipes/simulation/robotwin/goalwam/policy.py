@@ -20,10 +20,8 @@ from recipes.GoalWAM.data.dataset import (
     validate_values,
 )
 from recipes.GoalWAM.data.images import (
-    camera_layout,
     compose_cameras,
     compose_goal_image,
-    letterbox,
     validate_goal_image_composition,
 )
 from recipes.GoalWAM.data.relative_action import (
@@ -101,8 +99,6 @@ def load_settings(checkpoint, recipe=None):
             if saved["data"].get(key) != supplied["data"].get(key):
                 raise ValueError(f"Recipe disagrees with trained checkpoint data.{key}")
     data = settings["data"]
-    # Older saved head_only recipes kept full wrist observations and centered
-    # the head goal on the full canvas. Preserve that checkpoint's conditioning.
     data["_image_preprocessing_version"] = saved.get("image_preprocessing_version", 1) if saved else 2
     if data["_image_preprocessing_version"] not in (1, 2):
         raise ValueError("Unsupported checkpoint image preprocessing version")
@@ -131,9 +127,6 @@ class ObservationProcessor:
         )
         self.layout = resolve_action_layout(data.get("action_layout", ACTION_LAYOUT))
         self.buckets = validate_buckets(data.get("img_size_buckets"), data["img_size"])
-        self.legacy_head_only = (
-            data.get("_image_preprocessing_version", 2) == 1 and self.goal_image_composition == "head_only"
-        )
         if self.layout != resolve_action_layout(ACTION_LAYOUT):
             raise ValueError("Simulation requires the canonical 49-D layout")
         self.raw_config = SimpleNamespace(
@@ -186,21 +179,13 @@ class ObservationProcessor:
         for field in ("images", "goal_images"):
             views = {}
             for camera in self.data["enable_cameras"]:
-                if (
-                    self.goal_image_composition == "head_only"
-                    and camera in ("left", "right")
-                    and field == "goal_images"
-                ):
-                    continue
                 value = np.asarray(request[field].get(camera))
                 if value.ndim != 3 or value.shape[-1] != 3 or value.dtype != np.uint8 or min(value.shape[:2]) < 1:
                     if camera in ("left", "right"):
                         continue
                     raise ValueError("Expected decoded uint8 RGB images")
                 views[camera] = torch.from_numpy(value.copy()).permute(2, 0, 1)[None]
-            if self.legacy_head_only and field == "goal_images":
-                canvas, _ = letterbox(views["head"], camera_layout(img_size, self.data["enable_cameras"])[0])
-            elif field == "images":
+            if field == "images":
                 canvas, _, _ = compose_cameras(views, img_size, self.data["enable_cameras"])
             else:
                 canvas, _, _ = compose_goal_image(

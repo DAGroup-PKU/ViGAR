@@ -1,16 +1,14 @@
-"""Goal-only layouts, unavailable wrists, native conditioning and resume."""
+"""Multi-view goal layouts, unavailable wrists and native conditioning."""
 
 import json
 
 import pytest
 import torch
 
-from recipes.GoalWAM.data.data_loader import StatefulWindowLoader, collate_samples
-from recipes.GoalWAM.data.dataset import LeRobot0824Dataset, LeRobot0824SFTDataset
-from recipes.GoalWAM.data.images import CAMERA_KEYS, camera_layout, compose_cameras, compose_goal_image
+from recipes.GoalWAM.data.dataset import LeRobot0824Dataset
+from recipes.GoalWAM.data.images import CAMERA_KEYS, camera_layout, compose_goal_image
 from recipes.GoalWAM.tests.test_goal_sampling import dataset
 from recipes.GoalWAM.trainer.arguments import GoalWAMDataArguments
-from recipes.GoalWAM.trainer.evaluator import inference_sample
 from recipes.GoalWAM.trainer.metrics import image_metrics
 
 
@@ -47,21 +45,6 @@ def test_missing_or_invalid_wrists_leave_black_reserved_cells(missing, invalid):
             assert pixels.any() and cell[..., pixels].eq({"head": 50, "left": 100, "right": 200}[name]).all()
 
 
-def test_head_only_keeps_canvas_and_ignores_wrist_content():
-    images = views()
-    enabled = ["head", "left", "right"]
-    expected, expected_mask, _ = compose_cameras({"head": images["head"]}, (240, 320), enabled)
-    actual, mask, boxes = compose_goal_image(images, (240, 320), enabled, "head_only")
-    assert torch.equal(actual, expected) and torch.equal(mask, expected_mask)
-    assert set(boxes) == {"head", "left", "right"}
-    assert not actual[..., ~mask].any()
-    assert actual[..., mask].eq(50).all()
-    head, _, _ = compose_goal_image({"head": images["head"]}, (240, 320), enabled, "head_only")
-    assert torch.equal(actual, head)
-    mosaic, _, _ = compose_cameras(images, (240, 320), enabled)
-    assert mosaic.shape == actual.shape and not torch.equal(mosaic, actual)
-
-
 def test_black_rgb_is_valid_and_required_head_is_not_fabricated():
     images = views()
     images["left"].zero_()
@@ -69,24 +52,19 @@ def test_black_rgb_is_valid_and_required_head_is_not_fabricated():
     y, x, h, w = boxes["left"]
     assert mask[y : y + h, x : x + w].any()
     images["head"] = None
-    for mode in ("multi_view", "head_only"):
-        with pytest.raises(ValueError, match="head"):
-            compose_goal_image(images, (32, 32), list(images), mode)
+    with pytest.raises(ValueError, match="head"):
+        compose_goal_image(images, (32, 32), list(images))
 
 
-@pytest.mark.parametrize("mode", ["multi_view", "head_only"])
-def test_legacy_resize_profiles_support_goal_modes(mode):
+def test_legacy_resize_profile_composes_multi_view_goal():
     images = views()
     images.pop("left")
-    goal, mask, boxes = compose_goal_image(images, None, ["head", "left", "right"], mode, resolution="384x320")
+    goal, mask, boxes = compose_goal_image(images, None, ["head", "left", "right"], resolution="384x320")
     assert goal.shape == (1, 3, 384, 320)
     assert not goal[..., ~mask].any()
-    if mode == "multi_view":
-        assert not goal[:, :, 256:, :160].any()
-        assert goal[:, :, :256].eq(50).all()
-        assert goal[:, :, 256:, 160:].eq(200).all()
-    else:
-        assert not goal[:, :, 256:].any() and goal[..., mask].eq(50).all()
+    assert not goal[:, :, 256:, :160].any()
+    assert goal[:, :, :256].eq(50).all()
+    assert goal[:, :, 256:, 160:].eq(200).all()
 
 
 def rebuild(raw, tmp_path, mode="multi_view"):
@@ -159,63 +137,7 @@ def test_unavailable_goal_wrist_retains_valid_rollout_and_head_errors_fail(tmp_p
         raw[0]
 
 
-@pytest.mark.parametrize("training", [False, True])
-def test_head_only_blanks_only_goal_and_preserves_rollout_wrists(tmp_path, training):
-    raw = dataset(tmp_path)
-    baseline = raw[0]
-    head = rebuild(raw, tmp_path, "head_only")
-    head.training = training
-    original = head._video
-    reads = []
-
-    def read(ep, camera, indices):
-        reads.append((camera, indices))
-        return original(ep, camera, indices)
-
-    head._video = read
-    sample = head[0]
-    for key in ("action", "action_valid_mask", "video", "video_pixel_mask"):
-        torch.testing.assert_close(sample[key], baseline[key], rtol=0, atol=0)
-    expected_indices = head.physical_sample(0)["video_indices"].tolist()
-    for name in ("left", "right"):
-        assert (CAMERA_KEYS[name], expected_indices) in reads
-        assert sum(camera == CAMERA_KEYS[name] for camera, _ in reads) == 1
-        y, x, h, w = sample["camera_boxes"][name]
-        assert sample["video"][..., y : y + h, x : x + w].any()
-        assert sample["video_pixel_mask"][y : y + h, x : x + w].any()
-        assert not sample["goal_frame"][..., y : y + h, x : x + w].any()
-        assert not sample["goal_pixel_mask"][y : y + h, x : x + w].any()
-    assert sample["goal_frame"].shape == baseline["goal_frame"].shape
-    assert not torch.equal(sample["goal_frame"], baseline["goal_frame"])
-    prepared = LeRobot0824SFTDataset(head)[0]
-    baseline_prepared = LeRobot0824SFTDataset(raw)[0]
-    torch.testing.assert_close(prepared["video"][-1], baseline_prepared["video"][-1], rtol=0, atol=0)
-    assert prepared["sequence_plan"].vision_item_roles == ["goal", "default"]
-    assert prepared["video"][0].shape[-2:] == prepared["video"][-1].shape[-2:]
-    inference = inference_sample(prepared)
-    assert torch.equal(inference["video"][0], sample["goal_frame"])
-    assert not inference["video"][-1][:, 1:].any()
-    batch = collate_samples([prepared, prepared])
-    assert len(batch["video"]) == 2
-
-
-@pytest.mark.parametrize("tails", [False, True])
-def test_composition_change_rejects_exact_resume_but_default_is_legacy(tmp_path, tails):
-    raw = dataset(tmp_path, tails=tails)
-    legacy = StatefulWindowLoader(LeRobot0824SFTDataset(raw))
-    assert raw.image_composition_record() is None
-    assert "image_composition" not in legacy.state_dict()
-    head = rebuild(raw, tmp_path, "head_only")
-    current = StatefulWindowLoader(LeRobot0824SFTDataset(head))
-    current.load_state_dict(current.state_dict())
-    for loader, state in ((current, legacy.state_dict()), (legacy, current.state_dict())):
-        with pytest.raises(ValueError, match="Image composition changed"):
-            loader.load_state_dict(state)
-
-
 def test_composition_config_validation():
     assert GoalWAMDataArguments(train_path="manifest.yaml").goal_image_composition == "multi_view"
     with pytest.raises(ValueError, match="goal_image_composition"):
         GoalWAMDataArguments(train_path="manifest.yaml", goal_image_composition="unknown")
-    with pytest.raises(ValueError, match="requires head"):
-        GoalWAMDataArguments(train_path="manifest.yaml", goal_image_composition="head_only", enable_cameras=["left"])

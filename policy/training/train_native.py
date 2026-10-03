@@ -44,8 +44,8 @@ def main():
     dist.init_process_group('nccl', device_id=torch.device('cuda', int(os.environ['LOCAL_RANK'])))
     rank, world = dist.get_rank(), dist.get_world_size()
     assert (world == 8 and a.batch == 1 and a.steps == 2) if a.preflight else (world == 16 and a.batch * world == 256)
-    run_suffix = os.environ.get('POLICY8_RUN_SUFFIX', '')
-    run_name = os.environ.get('POLICY8_RUN_NAME', 'robotwin_c2r')
+    run_suffix = os.environ.get('GOALWAM_POLICY_RUN_SUFFIX', '')
+    run_name = os.environ.get('GOALWAM_POLICY_RUN_NAME', 'robotwin_c2r')
     out = ROOT / 'runs' / (('preflight_' if a.preflight else '') + run_name + run_suffix)
     out.mkdir(parents=True, exist_ok=True)
     _init_log_console()
@@ -219,7 +219,7 @@ def main():
         if it == start+1:
             from inference_check import verify_inference
             verify_inference(core, cfg, raw, recipe['data'], out, rank)
-        if os.environ.get('POLICY8_CHECKPOINT_PROBE') == str(it+1):
+        if os.environ.get('GOALWAM_POLICY_CHECKPOINT_PROBE') == str(it+1):
             save(it+1)
             write_json(out / f'checkpoint_probe.rank{rank}.json', dict(iteration=it+1, complete=True))
         if not a.preflight and ((it+1) % a.save_every == 0 or it+1 == a.steps):

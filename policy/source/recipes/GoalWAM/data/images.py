@@ -15,10 +15,8 @@ CAMERA_KEYS = {
 
 
 def validate_goal_image_composition(mode, enable_cameras):
-    if mode not in ("multi_view", "head_only"):
-        raise ValueError("goal_image_composition must be multi_view or head_only")
-    if mode == "head_only" and "head" not in enable_cameras:
-        raise ValueError("goal_image_composition=head_only requires head in enable_cameras")
+    if mode != "multi_view":
+        raise ValueError("goal_image_composition must be multi_view")
     return mode
 
 
@@ -99,10 +97,8 @@ def compose_cameras(views, img_size, enable_cameras):
 
 
 def compose_goal_image(views, img_size, enable_cameras, mode="multi_view", *, resolution="384x320"):
-    """Compose a goal; head_only blanks its wrists without shrinking configured cells."""
+    """Compose a multi-view goal with the same layout as the observation canvas."""
     validate_goal_image_composition(mode, enable_cameras)
-    if mode == "head_only":
-        views = {name: frames for name, frames in views.items() if name not in ("left", "right")}
     if img_size is not None:
         return compose_cameras(views, img_size, enable_cameras)
     return compose_legacy_cameras(views, resolution)

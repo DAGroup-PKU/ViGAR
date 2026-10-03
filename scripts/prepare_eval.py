@@ -9,12 +9,10 @@ REPO = Path(__file__).resolve().parents[1]
 
 def build_plan(output, policy, planner, robotwin):
     plan = json.loads((REPO/'configs/eval_plan.json').read_text())
-    for key in ['migration_from', 'backend_cutover', 'followup_priority', 'i2i_vendor_by_checkpoint']:
-        plan.pop(key, None)
     plan.update(source=str(REPO/'policy/source'), simroot=str(robotwin),
                 checkpoints=[str(policy)], planner=str(planner),
                 planner_release=str(REPO/'i2i/inference_runtime'),
-                i2i_vendor_dir=str(REPO/'evaluation/vendor_speedup_lru'),
+                i2i_service_dir=str(REPO/'evaluation/i2i_service'),
                 paired_episode_file=str(REPO/'configs/paired_episodes.json'),
                 name='robotwin_c2r',
                 combination_evaluation_status='not_run_for_this_release',

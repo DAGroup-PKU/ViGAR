@@ -542,7 +542,7 @@ class LeRobot0824Dataset(Dataset):
         if self.goal_image_composition == "multi_view" and not missing and not self.img_size_buckets:
             return None
         return dict(
-            version=2 if self.goal_image_composition == "head_only" or self.img_size_buckets else 1,
+            version=2 if self.img_size_buckets else 1,
             goal_image_composition=self.goal_image_composition,
             missing_cameras=missing,
             resolution=self.resolution,
@@ -832,9 +832,6 @@ class LeRobot0824Dataset(Dataset):
         rollout_views, goal_views = {}, {}
         for name, camera in CAMERA_KEYS.items():
             if camera not in self.cameras:
-                continue
-            if self.goal_image_composition == "head_only" and name in ("left", "right"):
-                rollout_views[name] = self._camera_frames(ep, camera, indices)
                 continue
             frames = self._camera_frames(ep, camera, indices + goal_index)
             if frames is not None:

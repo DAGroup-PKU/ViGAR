@@ -56,7 +56,7 @@
     "overlapping_windows_counted": false,
     "padding_rows_included": false,
     "row_count": 552287,
-    "source_dataset": "/path/to/vigar/cosmos3zy_robotwin50_official_clean50_bsz128_meanstd_8gpu_20260705_1805_p9027_lerobot_v3.0",
+    "source_dataset": "/path/to/vigar/robotwin50_official_clean50_lerobot_v3.0",
     "source_stats_sha256": "81bc63ded074860abf780b72954b1d29b908c4b0e7a27ecbfa46058206cadb48",
     "split": "train",
     "split_assignment_sha256": "9a6c30398aefff8377228570c0f314b041308c2b333c243bcc9d0e0270ae63cc"

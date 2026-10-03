@@ -25,7 +25,7 @@ def task_arguments(root, task, task_config):
     args.update(
         task_name=task,
         task_config=task_config,
-        ckpt_setting="goalwam_0824",
+        ckpt_setting="goalwam",
         left_robot_file=str(robot_path),
         right_robot_file=str(robot_path),
         dual_arm_embodied=True,

@@ -88,7 +88,7 @@ class GoalWAMDataArguments(DataArguments):
     include_tail_windows: bool = False
     goal_sampling: GoalSamplingConfig = field(default_factory=GoalSamplingConfig)
     # Goal only; current/future cameras are selected by enable_cameras.
-    goal_image_composition: Literal["multi_view", "head_only"] = "multi_view"
+    goal_image_composition: Literal["multi_view"] = "multi_view"
     img_size: list[int] | None = None
     img_size_buckets: list[list[int]] = field(default_factory=list)
     resolution: str = "384x320"

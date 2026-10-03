@@ -112,6 +112,11 @@ def evaluate(config, client):
     sys.path.insert(0, str(root))
     sys.path.insert(0, str(root / "description/utils"))
     from generate_episode_instructions import generate_episode_descriptions
+    from sim_acceleration import install, AsyncWriter
+    # Optional simulator acceleration; the defaults run the unmodified simulator.
+    acceleration=config.get('sim_acceleration') or {}
+    install(defer_render=acceleration.get('defer_render',False),cache_every=acceleration.get('cache_every',1))
+    writer=AsyncWriter() if acceleration.get('async_io',False) else None
 
     previous = output / "summary.json"
     records, errors = [], []
@@ -255,7 +260,7 @@ def evaluate(config, client):
                         )
                         if config.get("joint_smoothing_window", 1) > 1:
                             chunk = smooth_joint_commands(chunk, config["joint_smoothing_window"])
-                        np.savez_compressed(
+                        (writer.savez if writer else np.savez_compressed)(
                             directory / f"chunk_{queries:04d}.npz",
                             **result,
                             controller_commands=chunk,
@@ -298,6 +303,8 @@ def evaluate(config, client):
                     environment.close_env(clear_cache=True)
                     del environment
                     gc.collect()
+                if writer:
+                    writer.close();writer=AsyncWriter()
                 completed += 1
                 write_summary(output, config, records, errors)
                 if completed == config["episodes"]:
@@ -310,6 +317,7 @@ def evaluate(config, client):
             records[-1]["status"] = "runtime_error"
         raise
     finally:
+        if writer:writer.close()
         write_summary(output, config, records, errors)
 
 

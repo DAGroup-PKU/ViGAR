@@ -31,7 +31,7 @@ Policy training uses 16 GPUs, microbatch 16, global batch 256 and 50k optimizer 
 
 The `robotwin_c2r` release preserves its original data-selection and image-processing settings. See the recorded configuration for exact values.
 
-The I2I lineage is normal training with selected 30k EMA, then 40k additional ROI updates with a fresh optimizer, then complete-state continuation on random500 to ROI step70k. The normal-stage wrapper stops at30k while preserving the original200k LR schedule. Head ROI windows are96×96, wrists48×48; target/background weight is4:1 with spatial-mean normalization. Source-image ROI is zero. Valid offscreen targets and explicitly allowed missing geometry retain global loss.
+The I2I lineage is normal training with selected 30k EMA, then 40k additional ROI updates with a fresh optimizer, then complete-state continuation on random500 to ROI step 70k. The normal-stage wrapper stops at 30k while preserving the original 200k LR schedule. Head ROI windows are 96×96, wrists 48×48; target/background weight is 4:1 with spatial-mean normalization. Source-image ROI is zero. Valid offscreen targets and explicitly allowed missing geometry retain global loss.
 
 ## Closed-loop evaluation
 

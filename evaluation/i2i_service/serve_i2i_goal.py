@@ -33,7 +33,7 @@ def main():
     with distributed_init():
         distributed.init()
     overrides = [
-        "job.project=robotwin_clean2rand", "job.group=i2i_async_eval",
+        "job.project=vigar", "job.group=i2i_async_eval",
         f"job.name=planner_port{args.port}", "job.wandb_mode=disabled",
         f"checkpoint.load_path={args.checkpoint}", "checkpoint.load_training_state=false",
         "checkpoint.only_load_scheduler_state=false", "checkpoint.keys_to_skip_loading=[]",

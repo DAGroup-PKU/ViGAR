@@ -3,7 +3,7 @@
 workspace: /path/to/vigar/assets
 robotwin_root: /path/to/vigar/assets
 server_url: http://127.0.0.1:18765
-# Same 50-task population as reports/goalwam_20260914.md.
+# The 50-task RoboTwin evaluation population.
 tasks:
   - adjust_bottle
   - beat_block_hammer

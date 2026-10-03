@@ -21,7 +21,7 @@ def generated_goal_views(canvas):
     t = torch.from_numpy(np.array(canvas, copy=True)).permute(2, 0, 1)[None]
     tiles = {'head': t[:, :, :256, :], 'left': t[:, :, 256:, :160],
              'right': t[:, :, 256:, 160:]}
-    # Native ObservationProcessor applies the checkpoint's head_only composition.
+    # Native ObservationProcessor recomposes these views into the policy's goal canvas.
     return {k: F.interpolate(v.float(), size=(240, 320), mode='bilinear',
                              align_corners=False).round().clamp(0, 255).byte()[0]
                .permute(1, 2, 0).numpy() for k, v in tiles.items()}

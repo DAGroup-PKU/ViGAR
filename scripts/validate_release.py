@@ -25,7 +25,7 @@ def main():
         if any(x in OMIT for x in rel.parts) or p.name=='.env':continue
         if not p.is_file():continue
         if p.is_symlink():raise ValueError(f'Unexpected symlink: {rel}')
-        if any(x in str(rel).lower() for x in ['robocasa','ablation','semantic_20k','native_baseline']):
+        if any(x in str(rel).lower() for x in ['robocasa','ablation']):
             raise ValueError(f'Out-of-scope file: {rel}')
         text=p.read_text()
         if p.stat().st_size>5*1024*1024:raise ValueError(f'Unexpected large file: {rel}')

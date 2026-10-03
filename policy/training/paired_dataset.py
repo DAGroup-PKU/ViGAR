@@ -52,7 +52,7 @@ class PairedDataset(LeRobot0824Dataset):
                          enable_cameras=['head', 'left', 'right'], img_size_buckets=[],
                          norm_type='bounds_99_woclip', goal_image_composition=goal_mode,
                          supervise_head_eef=False,
-                         parquet_cache_dir=os.environ.get('POLICY8_PARQUET_CACHE'))
+                         parquet_cache_dir=os.environ.get('GOALWAM_PARQUET_CACHE'))
 
     def case(self, index):
         position = index[0] if isinstance(index, tuple) else index
@@ -90,5 +90,5 @@ class PairedDataset(LeRobot0824Dataset):
 
     def selection_record(self):
         return dict(super().selection_record(), generated_goal_sha256=self.goal_manifest_hash,
-                    goal_ablation=self.paired_goal_mode, original_images_unchanged=True,
+                    goal_composition=self.paired_goal_mode, original_images_unchanged=True,
                     photometric_augmentation=JITTER_CONFIG, training_pixels_augmented=True, next_state_conversion=True, unknown_final_command_masked=True,lookahead_ratio=.15)
