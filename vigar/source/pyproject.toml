@@ -1,0 +1,126 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "veomni"
+version = "0.1.0"
+description = "VeOmni runtime for ViGAR"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+license = { file = "LICENSE" }
+dependencies = [
+  "blobfile>=3.0.0",
+  "datasets",
+  "packaging>=23.0,<26.0",
+  "torchdata>=0.8.0,<1.0",
+  "tiktoken>=0.9.0",
+  "psutil",
+  "timm",
+  "wandb",
+  "setuptools",
+  "einops>=0.8.1",
+  "h5py==3.16.0",
+  "lerobot==0.4.4",
+  "httpx[socks]",
+  "veomni-vigar-runtime",
+  "nvidia-cudnn-frontend==1.18.0",
+  "accelerate",
+  "attrs",
+  "cattrs",
+  "hydra-core",
+  "omegaconf",
+  "loguru",
+  "matplotlib",
+  "imageio[ffmpeg]",
+  "msgpack",
+  "nvidia-ml-py",
+  "obstore",
+  "pydantic",
+  "scipy==1.17.1",
+  "termcolor",
+  "tyro",
+  "websockets",
+  "pyarrow",
+  "pyyaml",
+  "aioboto3",
+  "aiofiles",
+  "boto3",
+  "ftfy",
+  "iopath",
+  "webdataset",
+  "einx",
+  "kornia",
+  "peft",
+  "ninja",
+  "tensorstore",
+  "pytz",
+  "qwen-vl-utils==0.0.14",
+  "multi-storage-client[boto3,fsspec]==0.44.0",
+  "numpy==2.2.6",
+  "safetensors==0.7.0",
+  "pillow==11.3.0",
+  "transformers==4.57.6",
+  "diffusers==0.37.0",
+  "av==16.1.0",
+  "opencv-python-headless==4.11.0.86",
+  "torchmetrics",
+  "rich"
+]
+
+[project.optional-dependencies]
+gpu = [
+  "torch==2.10.0",
+  "torchvision==0.25.0+cu128",
+  "torchaudio==2.10.0+cu128",
+  "nvidia-cusparselt-cu12",
+  "nvidia-npp-cu12==12.4.1.87",
+  "nvidia-nccl-cu12",
+  "liger-kernel==0.7.0",
+  "flash-attn==2.7.4.post1+cu128.torch210",
+  "ninja",
+  "hf_transfer",
+  "torchcodec==0.10.0+cu128",
+  "cuda-python==12.9.4",
+  "torch-c-dlpack-ext",
+  "torchao==0.16.0+cu128",
+  "flash-attn-3-nv==1.0.3+cu128.torch210",
+  "natten==0.21.6.dev6+cu128.torch210",
+  "transformer-engine==2.12.0+cu128.torch210"
+]
+
+[tool.uv]
+required-version = ">=0.10.0"
+environments = ["sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.13'"]
+override-dependencies = ["diffusers==0.37.0", "av==16.1.0", "huggingface-hub>=0.34.0,<1.0", "nvidia-cudnn-cu12==9.10.2.21"]
+
+[tool.uv.sources]
+veomni-vigar-runtime = { path = "third_party/cosmos_runtime", editable = true }
+torchvision = { index = "pytorch" }
+torchaudio = { index = "pytorch" }
+torchcodec = { index = "pytorch" }
+torchao = { index = "pytorch" }
+flash-attn = { index = "cosmos" }
+flash-attn-3-nv = { index = "cosmos" }
+natten = { index = "cosmos" }
+transformer-engine = { index = "cosmos" }
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[[tool.uv.index]]
+name = "cosmos"
+url = "https://nvidia-cosmos.github.io/cosmos-dependencies/v1.5.0"
+explicit = true
+
+[[tool.uv.dependency-metadata]]
+name = "flash-attn"
+requires-dist = ["torch", "einops"]
+
+[tool.setuptools.packages.find]
+include = ["veomni*", "recipes*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.json", "*.yaml", "*.toml", "*.txt"]

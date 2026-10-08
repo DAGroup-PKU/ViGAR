@@ -1,0 +1,62 @@
+{
+  "repository": "DAGroup-PKU/ViGAR",
+  "policy": {
+    "name": "robotwin_c2r",
+    "step": 50000,
+    "weights": "ema",
+    "lookahead_ratio": 0.15,
+    "color_jitter": {
+      "brightness": 0.3,
+      "contrast": 0.4,
+      "saturation": 0.5,
+      "hue": 0
+    },
+    "canonical_action_dim": 49,
+    "action_horizon": 48,
+    "execution_prefix": 32,
+    "normalization": "bounds_99_woclip",
+    "hub_path": "weights/policy/robotwin_c2r"
+  },
+  "evaluation": {
+    "goal_refresh_mode": "sync_current",
+    "policy_sampling": {
+      "steps": 10,
+      "guidance": 1,
+      "shift": 2
+    },
+    "planner_sampling": {
+      "steps": 35,
+      "guidance": 2.5,
+      "shift": 5
+    },
+    "episodes_per_split": 100,
+    "tasks": 50,
+    "splits": [
+      "clean",
+      "random"
+    ],
+    "nodes": 1,
+    "gpus_per_node": 8
+  },
+  "weights_repository": "DAGroup-PKU/ViGAR",
+  "subgoal_planner": {
+    "name": "robotwin_subgoal_planner",
+    "step": 100000,
+    "weights": "regular",
+    "next_subgoal_tail_fraction": 0.15,
+    "roi_background_relative_weights": [
+      4,
+      1
+    ],
+    "target": "expert_GT",
+    "hub_path": "weights/subgoal_planner/robotwin_subgoal_planner",
+    "initialization": "Cosmos3-Nano"
+  },
+  "base_checkpoint": {
+    "name": "Cosmos3-Nano-dcp",
+    "source": "nvidia/Cosmos3-Nano",
+    "revision": "fea6e03ac3d7884b4105ed8ee79fc480fca70965",
+    "hub_path": "weights/Cosmos3-Nano-dcp"
+  },
+  "policy_dataset": "data/robotwin_segmented_2500"
+}

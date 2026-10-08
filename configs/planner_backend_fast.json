@@ -1,0 +1,5 @@
+{
+  "backend": "fast",
+  "pad_alignment": 32,
+  "recompile_limit": 128
+}

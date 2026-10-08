@@ -1,0 +1,4 @@
+{
+  "backend": "eager_graph",
+  "max_graphs": 16
+}

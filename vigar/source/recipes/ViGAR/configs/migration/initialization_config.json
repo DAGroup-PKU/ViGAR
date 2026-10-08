@@ -1,0 +1,399 @@
+{
+  "model_type": "vigar",
+  "architectures": [
+    "ViGARPolicy"
+  ],
+  "cosmos": {
+    "model": {
+      "_recursive_": false,
+      "_target_": "cosmos_framework.model.vfm.omni_mot_model.OmniMoTModel",
+      "config": {
+        "action_gen": true,
+        "activation_checkpointing": {
+          "determinism_check": "default",
+          "mode": "full",
+          "preserve_rng_state": true,
+          "save_ops_regex": [
+            "fmha"
+          ]
+        },
+        "causal_training_strategy": "none",
+        "compile": {
+          "compile_dynamic": true,
+          "compiled_region": "language",
+          "coordinate_descent_tuning": false,
+          "enabled": false,
+          "max_autotune_pointwise": false,
+          "use_cuda_graphs": false
+        },
+        "diffusion_expert_config": {
+          "base_fps": 24,
+          "enable_fps_modulation": true,
+          "load_weights_from_pretrained": true,
+          "max_vae_latent_side_after_patchify": 20,
+          "patch_spatial": 2,
+          "position_embedding_type": "unified_3d_mrope",
+          "rope_h_extrapolation_ratio": 1.0,
+          "rope_t_extrapolation_ratio": 1.0,
+          "rope_w_extrapolation_ratio": 1.0,
+          "sound_base_temporal_compression_factor": null,
+          "timestep_range": 1.0,
+          "unified_3d_mrope_reset_spatial_ids": true,
+          "unified_3d_mrope_temporal_modality_margin": 15000,
+          "vision_temporal_position_mode": "latent_index"
+        },
+        "ema": {
+          "enabled": true,
+          "iteration_shift": 0,
+          "rate": 0.1
+        },
+        "enable_goal_vision_embed": true,
+        "exclude_reasoner_weights_from_checkpoint": false,
+        "fixed_step_sampler_config": null,
+        "input_caption_key": "ai_caption",
+        "input_image_key": "images",
+        "input_video_key": "video",
+        "joint_attn_implementation": "two_way",
+        "latent_downsample_factor": 16,
+        "lbl": {
+          "coeff_gen": null,
+          "coeff_und": null,
+          "method": "local"
+        },
+        "log_enc_time_every_n": 100,
+        "lora_alpha": 32,
+        "lora_enabled": false,
+        "lora_rank": 16,
+        "lora_target_modules": "q_proj_moe_gen,k_proj_moe_gen,v_proj_moe_gen,o_proj_moe_gen",
+        "max_action_dim": 64,
+        "max_num_tokens_after_packing": -1,
+        "natten_parameter_list": null,
+        "net": null,
+        "num_embodiment_domains": 32,
+        "parallelism": {
+          "attention_io_layout": "sequence_sharded",
+          "cfg_parallel_shard_degree": 1,
+          "context_parallel_shard_degree": 1,
+          "data_parallel_replicate_degree": 1,
+          "data_parallel_shard_degree": 4,
+          "enable_inference_mode": false,
+          "fsdp_master_dtype": "float32"
+        },
+        "precision": "bfloat16",
+        "rectified_flow_inference_config": {
+          "num_train_timesteps": 1000,
+          "scheduler_type": "unipc",
+          "shift": 1,
+          "use_dynamic_shifting": false
+        },
+        "rectified_flow_training_config": {
+          "action_loss_weight": 10.0,
+          "image_loss_scale": 1.0,
+          "independent_action_schedule": false,
+          "independent_sound_schedule": false,
+          "loss_scale": 10.0,
+          "normalize_loss_by_active": false,
+          "shift": {
+            "256": 3,
+            "384x320": 5,
+            "480": 5,
+            "720": 10,
+            "736x640": 5
+          },
+          "shift_action": null,
+          "shift_sound": null,
+          "sound_loss_scale": null,
+          "train_time_action_distribution": "logitnormal",
+          "train_time_image_distribution": "logitnormal",
+          "train_time_sound_distribution": "logitnormal",
+          "train_time_video_distribution": "waver",
+          "train_time_weight": "uniform",
+          "use_discrete_rf": false,
+          "use_dynamic_shift": false
+        },
+        "resolution": "384x320",
+        "sound_dim": null,
+        "sound_gen": false,
+        "sound_latent_fps": 25,
+        "sound_tokenizer": null,
+        "state_ch": 48,
+        "state_t": 300,
+        "tokenizer": {
+          "_target_": "cosmos_framework.model.vfm.tokenizers.wan2pt2_vae_4x16x16.Wan2pt2VAEInterface",
+          "bucket_name": "",
+          "causal": true,
+          "chunk_duration": 93,
+          "encode_bucket_multiple": null,
+          "encode_chunk_frames": {
+            "256": 68,
+            "384x320": 24,
+            "480": 24,
+            "720": 12,
+            "736x640": 24
+          },
+          "encode_exact_durations": [
+            13
+          ],
+          "keep_decoder_cache": false,
+          "object_store_credential_path_pretrained": "",
+          "spatial_compression_factor": 16,
+          "temporal_compression_factor": 4,
+          "temporal_window": null,
+          "use_streaming_encode": false,
+          "vae_path": "/path/to/vigar/Wan2.2_VAE.pth"
+        },
+        "video_temporal_causal": false,
+        "vision_gen": true,
+        "vlm_config": {
+          "layer_module": "Qwen2MoTDecoderLayer",
+          "model_instance": {
+            "_target_": "cosmos_framework.model.vfm.mot.unified_mot.Qwen3VLTextForCausalLM",
+            "config": {
+              "_target_": "cosmos_framework.configs.base.defaults.vlm.create_vlm_config",
+              "base_config": {
+                "_target_": "cosmos_framework.model.vfm.mot.unified_mot.Qwen3VLMoTConfig.from_json_file",
+                "json_file": "cosmos_framework/model/vfm/vlm/qwen3_vl/configs/Qwen3-VL-8B-Instruct.json"
+              },
+              "freeze_und": false,
+              "layer_module": "MoTDecoderLayer",
+              "qk_norm_for_text": true,
+              "tie_word_embeddings": true
+            }
+          },
+          "model_name": "Qwen/Qwen3-VL-8B-Instruct",
+          "pretrained_weights": {
+            "backbone_path": "s3://example-bucket/cosmos3/pretrained/huggingface/Qwen/Qwen3-VL-8B-Instruct/",
+            "checkpoint_format": null,
+            "credentials_path": "",
+            "enable_gcs_patch_in_boto3": true,
+            "enabled": false
+          },
+          "qk_norm": false,
+          "safetensors_path": "",
+          "tie_word_embeddings": false,
+          "tokenizer": {
+            "_target_": "cosmos_framework.configs.base.defaults.vlm.create_qwen2_tokenizer_with_download",
+            "config_variant": "hf",
+            "pretrained_model_name": "/path/to/vigar/assets"
+          },
+          "use_system_prompt": false
+        }
+      }
+    },
+    "optimizer": {
+      "_target_": "cosmos_framework.utils.vfm.optimizer.build_optimizer",
+      "betas": [
+        0.9,
+        0.99
+      ],
+      "disable_weight_decay_for_1d_params": false,
+      "eps": 1e-08,
+      "fused": true,
+      "keys_to_select": [
+        "moe_gen",
+        "time_embedder",
+        "vae2llm",
+        "llm2vae",
+        "action2llm",
+        "llm2action",
+        "action_modality_embed",
+        "goal_vision_embed"
+      ],
+      "lr": 1e-05,
+      "lr_multipliers": {
+        "action2llm": 5.0,
+        "action_modality_embed": 5.0,
+        "llm2action": 5.0
+      },
+      "model": null,
+      "optimizer_type": "FusedAdam",
+      "weight_decay": 0.05
+    },
+    "scheduler": {
+      "_target_": "cosmos_framework.utils.vfm.optimizer.build_lr_scheduler",
+      "cycle_lengths": [
+        100000
+      ],
+      "f_max": [
+        0.4
+      ],
+      "f_min": [
+        0.0
+      ],
+      "f_start": [
+        0.0
+      ],
+      "lr_scheduler_type": "LambdaLinear",
+      "optimizer": null,
+      "verbosity_interval": 0,
+      "warm_up_steps": [
+        0
+      ]
+    },
+    "trainer": {
+      "callbacks": {
+        "goal_conditioning_health": {
+          "_target_": "cosmos_framework.callbacks.goal_conditioning_health.GoalConditioningHealthCheck",
+          "goal_parameter_suffix": "goal_vision_embed",
+          "grad_accum_steps": 1,
+          "max_consecutive_nonfinite_windows": 1,
+          "max_update_check_optimizer_steps": 3,
+          "trainable_allowlist": [
+            "moe_gen",
+            "time_embedder",
+            "vae2llm",
+            "llm2vae",
+            "action2llm",
+            "llm2action",
+            "action_modality_embed",
+            "goal_vision_embed"
+          ]
+        },
+        "grad_clip": {
+          "_target_": "cosmos_framework.callbacks.grad_clip.GradClip",
+          "clip_norm": 1.0,
+          "force_finite": true,
+          "track_per_modality": true
+        },
+        "low_precision": {
+          "_target_": "cosmos_framework.utils.callback.LowPrecisionCallback",
+          "config": null,
+          "trainer": null,
+          "update_iter": 1
+        }
+      },
+      "compile_config": {
+        "recompile_limit": 8,
+        "use_duck_shape": false
+      },
+      "cudnn": {
+        "benchmark": false,
+        "deterministic": true
+      },
+      "ddp": {
+        "broadcast_buffers": true,
+        "find_unused_parameters": false,
+        "static_graph": true
+      },
+      "distributed_parallelism": "fsdp",
+      "grad_accum_iter": 1,
+      "grad_scaler_args": {
+        "enabled": false
+      },
+      "logging_iter": 1,
+      "max_iter": 20,
+      "max_val_iter": null,
+      "memory_format": "torch.preserve_format",
+      "profiling": {
+        "enable_memory_snapshot": false,
+        "enable_nsys": false,
+        "enable_profiling": false,
+        "profile_freq": 1,
+        "profile_memory": false,
+        "profile_warmup": 3,
+        "record_shape": false,
+        "save_s3": false,
+        "target_ranks": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "with_modules": true,
+        "with_stack": true
+      },
+      "run_validation": false,
+      "run_validation_on_start": false,
+      "save_zero_checkpoint": true,
+      "seed": 42,
+      "straggler_detection": {
+        "analyze_backward": true,
+        "analyze_dataloading": true,
+        "analyze_forward": true,
+        "analyze_optimizer": true,
+        "enabled": false,
+        "max_diff": 2.0,
+        "profile_freq": 1,
+        "raise_error": true,
+        "report_freq": 100,
+        "save_s3": false
+      },
+      "timeout_period": 999999999,
+      "validation_iter": 100
+    },
+    "job": {
+      "project": "vigar_migration",
+      "group": "robotwin",
+      "name": "veomni",
+      "wandb_mode": "disabled"
+    },
+    "checkpoint": {
+      "broadcast_via_filesystem": false,
+      "dcp_async_mode_enabled": false,
+      "enable_gcs_patch_in_boto3": true,
+      "hf_export": {
+        "enabled": false,
+        "export_every_n": 1,
+        "hf_repo_id": null,
+        "upload_to_object_store": {
+          "bucket": "",
+          "credentials": "",
+          "enabled": false
+        }
+      },
+      "jit": {
+        "device": "cuda",
+        "dtype": "bfloat16",
+        "enabled": false,
+        "input_shape": null,
+        "strict": true
+      },
+      "keys_not_to_resume": [],
+      "keys_to_skip_loading": [
+        "net_ema.",
+        "action2llm",
+        "llm2action",
+        "action_modality_embed",
+        "action_pos_embed",
+        "goal_vision_embed"
+      ],
+      "load_ema_to_reg": false,
+      "load_from_object_store": {
+        "bucket": "",
+        "credentials": "",
+        "enabled": false
+      },
+      "load_path": "/path/to/vigar/assets",
+      "load_training_state": false,
+      "only_load_scheduler_state": false,
+      "save_iter": 20,
+      "save_to_object_store": {
+        "bucket": "",
+        "credentials": "",
+        "enabled": false
+      },
+      "strict_resume": false,
+      "type": {
+        "_target_": "cosmos_framework.checkpoint.dcp.DistributedCheckpointer",
+        "callbacks": null,
+        "disable_async": false
+      },
+      "verbose": true
+    }
+  },
+  "action_horizon": 48,
+  "action_dim": 49,
+  "padded_action_dim": 64,
+  "video_stride": 4,
+  "observation_history": 1,
+  "provenance": {
+    "source_revision": "e1bece9854deedf9baa20778086499b23c0aaf94",
+    "source_config_sha256": "e700d1452f55a70907d905408c37b10ed5bfd8b9f7fbcdf40612a79397f61349",
+    "normalization_sha256": "043abfe02703c23b944e23ee31c1d9465edd3bf8ddafa0518668f13d136c0617",
+    "checkpoint_revision": "7a312c868bcce8e40b3eb40861300a9d0ba3fde1"
+  }
+}
