@@ -24,6 +24,11 @@ Jiaxin Fang<sup>3</sup> · Bo Liang<sup>1</sup> · Jiaxin Li<sup>1</sup> · Yuxi
 
 ![ViGAR teaser: task-diverse and long-horizon data train a subgoal planner and a world-action policy, enabling long-horizon manipulation by subtask decomposition and in-context learning on unseen tasks](assets/teaser.jpg)
 
+## 🔥 News
+
+- **2026.10.11**: ViGAR ranks #3 on the [RoboTwin 2.0 Leaderboard](https://robotwin-platform.github.io/leaderboard).
+- **2026.10.05**: ViGAR is released on [arXiv](https://arxiv.org/abs/2610.02368).
+
 ## 📑 Todo List
 
 - [x] Evaluation code and checkpoints on **RoboTwin**.
