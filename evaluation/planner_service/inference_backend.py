@@ -37,10 +37,10 @@ class CheckedBackend:
             from cosmos_framework.model.vfm.mot.parallelize_unified_mot import apply_compile
             from cosmos_framework.utils.inference_fusions import fuse_attention_qkv,fuse_dense_swiglu
             from types import SimpleNamespace
-            import torch._dynamo
+            import torch._dynamo as dynamo
             # Static shapes recompile once per packed sample length (one per instruction length).
-            torch._dynamo.config.recompile_limit=self.profile.get('recompile_limit',128)
-            torch._dynamo.config.accumulated_recompile_limit=8*torch._dynamo.config.recompile_limit
+            dynamo.config.recompile_limit=self.profile.get('recompile_limit',128)
+            dynamo.config.accumulated_recompile_limit=8*dynamo.config.recompile_limit
             original=list(model.net.language_model.model.layers);old_pad=model.net.pad_for_cuda_graphs
             def restore():
                 for i,layer in enumerate(original):model.net.language_model.model.layers[i]=layer

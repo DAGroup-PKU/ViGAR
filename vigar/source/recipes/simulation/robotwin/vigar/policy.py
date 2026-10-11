@@ -264,11 +264,11 @@ class ViGARSimulationPolicy:
             compile_config = native.model.config.compile
             compile_config.enabled, compile_config.use_cuda_graphs = True, True
             compile_config.compile_dynamic, compile_config.compiled_region = False, "language"
-            import torch._dynamo
+            import torch._dynamo as dynamo
 
             # Static shapes recompile once per packed sample length (one per instruction length).
-            torch._dynamo.config.recompile_limit = 128
-            torch._dynamo.config.accumulated_recompile_limit = 8 * torch._dynamo.config.recompile_limit
+            dynamo.config.recompile_limit = 128
+            dynamo.config.accumulated_recompile_limit = 8 * dynamo.config.recompile_limit
         torch.backends.cuda.matmul.allow_bf16_reduced_precision_reduction = True
         torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = True
         torch.backends.cuda.matmul.allow_tf32 = False
