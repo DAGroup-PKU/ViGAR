@@ -5,11 +5,138 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ViGAR: Rethinking World-Action Model for Compositional and In-Context Robotic Manipulation</title>
   <meta name="description" content="ViGAR (Visual Goal-conditioned Action Reasoning) factorizes long-horizon manipulation into a visual subgoal planner and a subgoal-guided world-action policy, both built on one pretrained world model. It reaches 82.00% / 67.02% on RoboTwin Clean / Random and supports in-context task specification from a single global goal image.">
-  <meta name="keywords" content="World-Action Model, Robotic Manipulation, Visual Subgoal, In-Context Learning, Cosmos, RoboTwin, AgiBot">
+  <meta name="keywords" content="ViGAR, World-Action Model, Robotic Manipulation, Visual Subgoal, In-Context Learning, Cosmos, RoboTwin, AgiBot">
   <meta name="author" content="Shukai Gong, Xuanran Zhai, Yintianrun Zhang, Ruopeng Cui, Ye Huang, Yiyang Fu, Dexuan Lyu, Chaojie Li, Xinyi Song, Peiwen Lin, Chuang Wang, Mingyuan Jia, Yufan Deng, Jiaxin Fang, Bo Liang, Jiaxin Li, Yuxiang Gao, Hao Liu, Daquan Zhou">
   <meta property="og:type" content="article">
   <meta property="og:title" content="ViGAR: Rethinking World-Action Model for Compositional and In-Context Robotic Manipulation">
-  <meta property="og:image" content="static/images/teaser.jpg">
+  <meta property="og:description" content="ViGAR (Visual Goal-conditioned Action Reasoning): a hierarchical world-action model for compositional and in-context robotic manipulation.">
+  <meta property="og:url" content="https://dagroup-pku.github.io/ViGAR/">
+  <meta property="og:site_name" content="ViGAR">
+  <meta property="og:image" content="https://dagroup-pku.github.io/ViGAR/static/images/teaser.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ViGAR: Rethinking World-Action Model for Compositional and In-Context Robotic Manipulation">
+  <meta name="twitter:image" content="https://dagroup-pku.github.io/ViGAR/static/images/teaser.jpg">
+  <link rel="canonical" href="https://dagroup-pku.github.io/ViGAR/">
+  <meta name="citation_title" content="ViGAR: Rethinking World-Action Model for Compositional and In-Context Robotic Manipulation">
+  <meta name="citation_arxiv_id" content="2610.02368">
+  <meta name="citation_pdf_url" content="https://arxiv.org/pdf/2610.02368">
+  <meta name="citation_publication_date" content="2026/10/01">
+  <meta name="citation_author" content="Shukai Gong">
+  <meta name="citation_author" content="Xuanran Zhai">
+  <meta name="citation_author" content="Yintianrun Zhang">
+  <meta name="citation_author" content="Ruopeng Cui">
+  <meta name="citation_author" content="Ye Huang">
+  <meta name="citation_author" content="Yiyang Fu">
+  <meta name="citation_author" content="Dexuan Lyu">
+  <meta name="citation_author" content="Chaojie Li">
+  <meta name="citation_author" content="Xinyi Song">
+  <meta name="citation_author" content="Peiwen Lin">
+  <meta name="citation_author" content="Chuang Wang">
+  <meta name="citation_author" content="Mingyuan Jia">
+  <meta name="citation_author" content="Yufan Deng">
+  <meta name="citation_author" content="Jiaxin Fang">
+  <meta name="citation_author" content="Bo Liang">
+  <meta name="citation_author" content="Jiaxin Li">
+  <meta name="citation_author" content="Yuxiang Gao">
+  <meta name="citation_author" content="Hao Liu">
+  <meta name="citation_author" content="Daquan Zhou">
+  <script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "ScholarlyArticle",
+ "headline": "ViGAR: Rethinking World-Action Model for Compositional and In-Context Robotic Manipulation",
+ "alternativeHeadline": "ViGAR: Visual Goal-conditioned Action Reasoning",
+ "name": "ViGAR",
+ "url": "https://dagroup-pku.github.io/ViGAR/",
+ "image": "https://dagroup-pku.github.io/ViGAR/static/images/teaser.jpg",
+ "datePublished": "2026-10-01",
+ "author": [
+  {
+   "@type": "Person",
+   "name": "Shukai Gong"
+  },
+  {
+   "@type": "Person",
+   "name": "Xuanran Zhai"
+  },
+  {
+   "@type": "Person",
+   "name": "Yintianrun Zhang"
+  },
+  {
+   "@type": "Person",
+   "name": "Ruopeng Cui"
+  },
+  {
+   "@type": "Person",
+   "name": "Ye Huang"
+  },
+  {
+   "@type": "Person",
+   "name": "Yiyang Fu"
+  },
+  {
+   "@type": "Person",
+   "name": "Dexuan Lyu"
+  },
+  {
+   "@type": "Person",
+   "name": "Chaojie Li"
+  },
+  {
+   "@type": "Person",
+   "name": "Xinyi Song"
+  },
+  {
+   "@type": "Person",
+   "name": "Peiwen Lin"
+  },
+  {
+   "@type": "Person",
+   "name": "Chuang Wang"
+  },
+  {
+   "@type": "Person",
+   "name": "Mingyuan Jia"
+  },
+  {
+   "@type": "Person",
+   "name": "Yufan Deng"
+  },
+  {
+   "@type": "Person",
+   "name": "Jiaxin Fang"
+  },
+  {
+   "@type": "Person",
+   "name": "Bo Liang"
+  },
+  {
+   "@type": "Person",
+   "name": "Jiaxin Li"
+  },
+  {
+   "@type": "Person",
+   "name": "Yuxiang Gao"
+  },
+  {
+   "@type": "Person",
+   "name": "Hao Liu"
+  },
+  {
+   "@type": "Person",
+   "name": "Daquan Zhou"
+  }
+ ],
+ "sameAs": [
+  "https://arxiv.org/abs/2610.02368",
+  "https://huggingface.co/papers/2610.02368",
+  "https://github.com/DAGroup-PKU/ViGAR",
+  "https://huggingface.co/DAGroup-PKU/ViGAR"
+ ],
+ "keywords": "ViGAR, World-Action Model, Robotic Manipulation, Visual Subgoal, In-Context Learning"
+}
+  </script>
   <meta name="theme-color" content="#2563eb">
 
   <link rel="icon" type="image/png" sizes="32x32" href="static/images/pku-icon-32.png">
@@ -41,7 +168,7 @@
     <div class="container is-max-desktop">
       <div class="columns is-centered">
         <div class="column has-text-centered">
-          <h1 class="title is-1 publication-title"><span class="title-grad">Rethinking World-Action Model for<br>Compositional and In-Context Robotic Manipulation</span></h1>
+          <h1 class="title is-1 publication-title"><span class="is-sr-only">ViGAR: </span><span class="title-grad">Rethinking World-Action Model for<br>Compositional and In-Context Robotic Manipulation</span></h1>
           <p class="hero-tagline"><span class="gradient-text tagline-name">ViGAR</span> &mdash; Visual Goal-conditioned Action Reasoning</p>
 
           <div class="is-size-5 publication-authors" style="margin-top:1.2rem">
